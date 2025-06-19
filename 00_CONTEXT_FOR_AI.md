@@ -1,0 +1,403 @@
+# Abiah.help - AI Startup Mentorship Platform
+
+## Project Overview
+
+**Abiah.help** is the world's first AI startup mentor platform that helps founders get funded through:
+- Face-to-face video consultations with industry-specific AI mentors
+- Intelligent document generation for funding readiness
+- Real-time guidance and emotional support for founders
+
+**Target Users**: Early-stage startup founders (pre-seed to Series A) who need mentorship and documentation help.
+
+**Core Value Proposition**: "Talk to Abiah - Your AI startup mentor trained to get you funded"
+
+## Technical Architecture
+
+### Frontend Stack
+- **Framework**: React 18+ with TypeScript
+- **Build Tool**: Vite for fast development
+- **Styling**: Tailwind CSS with custom design system
+- **State Management**: Jotai for atomic state (used by Tavus Vibecode)
+- **API Calls**: React Query (TanStack Query)
+- **Routing**: React Router v6
+- **Real-time**: Daily.co WebRTC for video communication
+- **Video**: Tavus CVI (Conversational Video Interface) integration
+- **Loading Animations**: ldrs package for loading indicators
+
+### Design System Brand Colors
+Primary: #2A2F6D (Professional blue)
+Secondary: #F9B94E (Warm gold)
+Neutral: #5B5F77 (Supporting gray)
+Success: #10B981 (Green for positive actions)
+Warning: #F59E0B (Amber for attention)
+Error: #EF4444 (Red for errors)
+Background Primary: #FFFFFF
+Background Secondary: #F8FAFC
+Text Primary: #1F2937
+Text Secondary: #6B7280
+Typography: Inter font family for both headings and body text
+
+### File Structure
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/              # Shadcn/ui base components
+│   ├── forms/           # Form components and validation
+│   ├── layout/          # Layout components (Header, Sidebar, etc.)
+│   ├── dashboard/       # Dashboard-specific components
+│   ├── video/           # Tavus video consultation components
+│   │   ├── Video.tsx    # Daily.co video component wrapper
+│   │   ├── Timer.tsx    # Session timer component
+│   │   └── DialogWrapper.tsx # Video dialog container
+│   ├── documents/       # Document generation components
+│   └── analytics/       # Analytics and charts components
+├── pages/               # Route components
+│   ├── auth/           # Authentication pages
+│   ├── onboarding/     # User onboarding flow
+│   ├── dashboard/      # Main dashboard pages
+│   ├── documents/      # Document management pages
+│   ├── video/          # Video consultation pages
+│   └── settings/       # User and org settings
+├── screens/            # Tavus video consultation screens
+│   ├── Conversation.tsx
+│   ├── ConversationError.tsx
+│   ├── ConversationLoading.tsx
+│   ├── ErrorScreen.tsx
+│   ├── Feedback.tsx
+│   ├── FinalScreen.tsx
+│   ├── Instructions.tsx
+│   ├── IntroLoading.tsx
+│   ├── Intro.tsx
+│   ├── Outage.tsx
+│   ├── OutOfMinutesScreen.tsx
+│   ├── Settings.tsx
+│   └── index.ts
+├── api/                # API integration layer
+│   ├── createConversation.ts
+│   ├── endConversation.ts
+│   └── tavus.ts
+├── store/              # Jotai atomic state management
+│   ├── conversation.ts
+│   ├── musicVolume.ts
+│   ├── screens.ts
+│   ├── settings.ts
+│   ├── tokens.ts
+│   └── game.ts
+│   └── videoStore.ts
+├── hooks/               # Custom React hooks
+├── types/               # TypeScript type definitions
+├── utils/               # Utility functions
+├── lib/                 # Library configurations
+│   └── supabase.ts      # Supabase client configuration
+│   └── utils.ts         # Utility functions like shadcn/ui
+├── config/              # Application configuration
+├── send-email/          # Send email function
+├── tavus-api/           # Tavus API function
+```
+
+## Core Features
+
+### 1. Authentication System
+- Email/password registration and login
+- Google OAuth integration
+- X.com OAuth integration
+- LinkedIn, GitHub OAuth integration
+- Email verification flow
+- Password reset functionality
+- JWT token management
+
+### 2. Video Consultation Platform
+- **AI Mentors**: General, FinTech, HealthTech specialized mentors with persona_id configuration
+- **Session Management**: Time-limited sessions with countdown and automatic termination
+- **Interactive Features**: Camera/mic controls, real-time video/audio, session recording
+- **Tavus CVI Integration**: Following the tavus-vibecode-quickstart repository structure
+- **Multi-screen Flow**: IntroLoading → Intro → Settings → Instructions → Conversation → FinalScreen
+- **Secure API Handling**: Backend proxy for Tavus API keys (never exposed in frontend)
+- **Network Quality Optimization**: Dynamic video quality based on connection
+- **Error Handling**: Outage and out-of-minutes screens for graceful error states
+
+### 3. Document Generation Engine
+**Document Types**:
+- Market Analysis & Competitive Research
+- User Research & Persona Development
+- Business Model Canvas
+- Financial Projections & Unit Economics
+- Pitch Deck & Investor Presentations
+
+**Generation Process**:
+1. Document type selection
+2. Startup context input
+3. Customization options
+4. AI processing (GPT-4 powered)
+5. Review, edit, and export
+
+### 4. Dashboard & Analytics
+- Funding readiness score with progress visualization
+- Recent consultation history
+- Document generation status
+- Quick action buttons for common tasks
+- Progress tracking toward funding goals
+
+### 5. User Profile Management
+- Personal information and startup details
+- Company profile (industry, stage, team size, funding)
+- Subscription management
+- Team member invitations
+
+## User Interface Patterns
+
+### Component Conventions
+Button component should support these props:
+- variant: primary, secondary, outline, ghost
+- size: sm, md, lg
+- loading: boolean for loading state
+- disabled: boolean for disabled state
+- children: React.ReactNode for button content
+- onClick: function for click handler
+
+Page components should follow consistent patterns with proper TypeScript interfaces for props including user data, consultations array, documents array, and funding readiness number.
+
+### Design Principles
+1. **Trust & Professionalism**: Clean, modern design that builds credibility
+2. **Emotional Support**: Warm, encouraging messaging throughout the interface
+3. **Clarity**: One primary action per screen, clear navigation
+4. **Progress**: Visual indicators for funding readiness and task completion
+5. **Accessibility**: WCAG 2.1 AA compliance, keyboard navigation
+
+## State Management
+
+### Zustand Stores
+**Auth Store should include**:
+- user: User object or null
+- isAuthenticated: boolean
+- login: function for email/password login
+- logout: function for user logout
+- updateProfile: function for profile updates
+
+**Consultation Store should include**:
+- currentSession: Consultation object or null
+- consultations: array of Consultation objects
+- isInSession: boolean
+- startConsultation: function for starting consultation with mentor type
+- endConsultation: function for ending consultation
+
+**Document Store should include**:
+- documents: array of Document objects
+- generationProgress: number for progress tracking
+- generateDocument: function for document generation with type and context
+- updateDocument: function for document updates
+
+## API Integration
+
+### Authentication Endpoints
+```
+POST /api/auth/login           - User login
+POST /api/auth/register        - User registration
+POST /api/auth/refresh         - Token refresh
+POST /api/auth/logout          - User logout
+POST /api/auth/forgot-password - Password reset
+```
+
+### Core Feature Endpoints
+User & Startup Management:
+GET  /api/user/profile         - Get user profile
+PUT  /api/user/profile         - Update user profile
+GET  /api/user/startup         - Get startup details
+PUT  /api/user/startup         - Update startup details
+Video Consultations:
+GET  /api/consultations        - List consultations
+POST /api/consultations        - Schedule new consultation
+GET  /api/consultations/:id    - Get consultation details
+POST /api/consultations/:id/join    - Join active consultation
+GET  /api/consultations/:id/transcript - Get session transcript
+Document Generation:
+GET  /api/documents           - List user documents
+POST /api/documents/generate  - Generate new document
+GET  /api/documents/:id       - Get document details
+PUT  /api/documents/:id       - Update document
+DELETE /api/documents/:id     - Delete document
+
+## Key User Personas
+
+### "The Overwhelmed First-Timer" (Primary - 45%)
+- **Profile**: 28-35, first startup, pre-seed stage
+- **Pain**: Documentation timing uncertainty, imposter syndrome
+- **Needs**: Step-by-step guidance, emotional support, confidence building
+
+### "The Scaling Strategist" (Secondary - 28%)
+- **Profile**: 32-42, Series A stage, 5-15 team members
+- **Pain**: Process scalability, operational complexity
+- **Needs**: Strategic guidance, advanced features, team collaboration
+
+### "The Compliance-Conscious Builder" (Tertiary - 18%)
+- **Profile**: 35-45, regulated industries (FinTech/HealthTech)
+- **Pain**: Complex regulatory requirements, compliance costs
+- **Needs**: Industry-specific expertise, regulatory guidance
+
+## Business Context
+
+### Pricing Tiers
+- **Founder**: $199/month - Basic consultations + 5 documents
+- **Growth**: $599/month - Unlimited consultations + advanced features
+- **Professional**: $1,299/month - Industry experts + compliance tools
+- **Enterprise**: $3,999/month - Custom solutions + team features
+
+### Success Metrics
+- **Customer Target**: 150 paying customers by Month 6
+- **Revenue Target**: $750K ARR
+- **User Experience**: 90%+ consultation completion rate
+- **Satisfaction**: 4.5+/5.0 user rating
+- **Retention**: <5% monthly churn
+
+### Competitive Positioning
+- **vs Traditional Consulting**: 85% cost reduction, 24/7 availability
+- **vs Software Tools**: Personal guidance + emotional support
+- **vs AI Writing Tools**: Startup-specific training + video mentorship
+
+## Development Guidelines
+
+### Code Quality Standards
+- TypeScript strict mode enabled
+- ESLint + Prettier for code formatting
+- Comprehensive error handling with user-friendly messages
+- Loading states for all async operations
+- Responsive design (mobile-first approach)
+- Accessibility compliance (ARIA labels, keyboard navigation)
+
+### Performance Targets
+- **Page Load**: <3 seconds on 3G networks
+- **Video Startup**: <10 seconds from click to consultation
+- **Bundle Size**: <500KB initial load (code splitting)
+- **Lighthouse Score**: 90+ for Performance, Accessibility, Best Practices
+
+### Testing Strategy
+- Component testing with React Testing Library
+- E2E testing with Cypress for critical user flows
+- Visual regression testing for UI consistency
+- API integration testing with mock service worker
+
+## Common Patterns & Utilities
+
+### Error Handling Pattern
+Create useErrorHandler hook that:
+- Accepts error parameter
+- Shows toast notification with error message
+- Logs error to console
+- Provides fallback message for unknown errors
+
+### Loading States Pattern
+Create useAsyncOperation hook that:
+- Manages loading state boolean
+- Manages error state
+- Provides execute function for async operations
+- Handles loading/error state transitions automatically
+
+### Mock Data Requirements
+Include realistic mock data for:
+- User profile with startup details (company name, industry, stage, team size, funding raised)
+- 3-4 sample consultations with different statuses (scheduled, completed, in-progress)
+- 5-6 documents in various states (generating, completed, failed)
+- Progress metrics and funding readiness score (0-100)
+- Sample AI mentor profiles for General, FinTech, and HealthTech
+
+### Required Pages and Routes
+Mainpage
+/ - Tavus like Hero section (https://www.tavus.io/)
+  - AI Video with Tavus AI, explaining who Abiah is and what it does
+  - Tagline changes for each target personas
+    - Startup tagline: 
+Authentication:
+/login - Email/password login with Google OAuth
+/register - Registration form with validation
+/forgot-password - Password reset flow
+Main Application:
+/dashboard - Main dashboard with overview
+/consultation - Video consultation interface
+/consultation/new - Start new consultation
+/documents - Document management
+/documents/generate - Document generation wizard
+/profile - User profile and startup settings
+/settings - Application settings and preferences
+
+### Component Library Requirements
+**UI Components to create**:
+- Button (with variants and states)
+- Card (for dashboard sections)
+- Modal (for confirmations and forms)
+- Toast, use Sooner (for notifications)
+- ProgressBar (for funding readiness)
+- Badge (for status indicators)
+- Spinner (for loading states)
+- Skeleton (for loading placeholders)
+
+**Layout Components**:
+- Header with navigation and user menu
+- Sidebar for desktop navigation
+- MobileMenu for responsive navigation
+- Footer with links and branding
+
+**Feature Components**:
+- ConsultationCard for displaying consultation info
+- DocumentCard for document management
+- VideoPlayer placeholder for Tavus integration
+- GenerationWizard for document creation flow
+- FundingReadinessScore with circular progress
+
+### Styling Guidelines
+- Use Tailwind CSS utility classes
+- Create custom components in components/ui folder
+- Maintain consistent spacing using Tailwind scale
+- Use brand colors defined in design system
+- Implement hover states and smooth transitions
+- Ensure mobile-responsive design
+- Include proper focus states for accessibility
+
+### Integration Points
+- **Tavus API Integration** for video consultations
+  - Uses Supabase Edge Functions to securely proxy API calls
+  - Implements two key endpoints:
+    1. **Create Conversation** (`POST https://api.tavus.io/v2/conversations`) - Initializes a video conversation with specified parameters
+    2. **End Conversation** (`POST https://api.tavus.io/v2/conversations/{id}/end`) - Terminates an active conversation
+  - Secures API key via server-side environment variables
+  - Provides client-side utilities for API communication
+- Mock OpenAI integration for document generation
+- Stripe integration placeholder for payments
+- Socket.io for real-time features
+- React Query for API state management
+- React Router for navigation
+
+## Tavus API Integration Details
+
+### Endpoints Used
+1. **Create Conversation**
+   - **URL**: `https://api.tavus.io/v2/conversations`
+   - **Method**: `POST`
+   - **Purpose**: Initializes a new video conversation with an AI mentor
+   - **Key Parameters**:
+     - `persona_id`: The AI persona to use (configured on Tavus backend)
+     - `greeting`: Custom initial greeting message
+     - `context`: Additional context for the conversation
+   - **Security**: Requires Bearer token authentication
+
+2. **End Conversation**
+   - **URL**: `https://api.tavus.io/v2/conversations/{id}/end`
+   - **Method**: `POST`
+   - **Purpose**: Properly terminates an active conversation
+   - **Parameters**: Conversation ID in URL path
+   - **Security**: Requires Bearer token authentication
+
+### Implementation Approach
+- All Tavus API calls are proxied through a Supabase Edge Function (`tavus-api`)
+- The Edge Function securely stores the production Tavus API key
+- Client-side code never directly exposes API keys
+- Used in video consultation components for conversation management
+
+This context provides everything needed to understand the project structure, implement new features, or debug existing functionality. Use this as the foundation for all Abiah.help development work.
+
+
+---
+
+# 🎯 FEATURE-SPECIFIC PROMPT TEMPLATE
+
+When adding new features to Abiah.help in future Bolt.new chats, use this template:
+[FEATURE_TEMPLATE.md](templates/FEATURE_TEMPLATE.md)
