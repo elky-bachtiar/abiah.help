@@ -1,127 +1,105 @@
-// Tavus API integration for video consultations
-const TAVUS_BASE_URL = 'https://api.tavus.io/v2';
+import { callEdgeFunction } from '@/lib/supabase'
 
-export interface CreateConversationRequest {
-  persona_id: string;
-  greeting?: string;
-  context?: string;
-  callback_url?: string;
+interface TavusRequestOptions {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+  endpoint: string
+  data?: Record<string, any>
+  headers?: Record<string, string>
 }
 
-export interface CreateConversationResponse {
-  conversation_id: string;
-  conversation_url: string;
-  status: string;
+interface TavusResponse<T = any> {
+  data?: T
+  error?: string
+  details?: any
 }
 
-export interface EndConversationRequest {
-  conversation_id: string;
-}
+/**
+ * Makes a request to the Tavus API through the Supabase Edge Function
+ * @param options Request options including method, endpoint, and data
+ * @returns Promise with the response data
+ * @throws {Error} If the request fails or returns an error
+ */
+/**
+ * Call the Tavus API using the specified Edge Function
+ * @param options Request options or endpoint string
+ * @param data Optional data for shorthand syntax
+ * @param useTestEndpoint Whether to use the test endpoint
+ * @returns API response data
+ */
+export async function callTavusAPI<T = any>(
+  options: TavusRequestOptions | string,
+  data?: Record<string, any>,
+  useTestEndpoint = false
+): Promise<T> {
+  // Handle shorthand syntax (just endpoint for GET, or endpoint + data)
+  const requestOptions: TavusRequestOptions = typeof options === 'string' 
+    ? { method: 'GET', endpoint: options, data }
+    : options
 
-export interface GetVideoResponse {
-  video_id: string;
-  video_url: string;
-  status: string;
-  created_at: string;
-}
-
-// These functions call our Supabase Edge Functions which proxy to Tavus API
-// This keeps API keys secure on the server side
-
-export async function createConversation(request: CreateConversationRequest): Promise<CreateConversationResponse> {
   try {
-    const response = await fetch('/api/tavus/conversations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
+    // Format the request body for the Edge Function
+    const edgeFunctionBody = {
+      method: requestOptions.method,
+      endpoint: requestOptions.endpoint,
+      payload: requestOptions.data,
+      headers: requestOptions.headers
+    };
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    console.log(`Calling Tavus API (${useTestEndpoint ? 'test endpoint' : 'production endpoint'}) with:`, edgeFunctionBody);
+    
+    // Use either test or production endpoint
+    const endpoint = useTestEndpoint ? 'tavus-api-test' : 'tavus-api';
+    const response = await callEdgeFunction<TavusResponse<T>>(endpoint, edgeFunctionBody);
+
+    if (response?.error) {
+      throw new Error(
+        response.error + (response.details ? `: ${JSON.stringify(response.details)}` : '')
+      )
     }
 
-    const data = await response.json();
-    return data;
+    return response?.data as T
   } catch (error) {
-    console.error('Error creating conversation:', error);
-    throw new Error('Failed to create video conversation');
+    console.error('Tavus API Error:', error)
+    throw new Error(
+      error instanceof Error 
+        ? error.message 
+        : 'An unknown error occurred while calling Tavus API'
+    )
   }
 }
 
-export async function endConversation(conversationId: string): Promise<void> {
-  try {
-    const response = await fetch(`/api/tavus/conversations/${conversationId}/end`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('Error ending conversation:', error);
-    throw new Error('Failed to end video conversation');
-  }
-}
-
-export async function getVideo(videoId: string): Promise<GetVideoResponse> {
-  try {
-    const response = await fetch(`/api/tavus/videos/${videoId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error getting video:', error);
-    throw new Error('Failed to get video details');
-  }
-}
-
-// Mock implementations for development
-export const mockTavusResponses = {
-  createConversation: {
-    conversation_id: 'conv_' + Math.random().toString(36).substring(7),
-    conversation_url: 'https://tavus.video/conv_mock_123',
-    status: 'active',
-  } as CreateConversationResponse,
-
-  getVideo: {
-    video_id: 'e990cb0d94',
-    video_url: 'https://tavus.video/e990cb0d94',
-    status: 'ready',
-    created_at: new Date().toISOString(),
-  } as GetVideoResponse,
-};
-
-// Development mode flag
-const isDevelopment = import.meta.env.DEV;
-
-// Use mock responses in development
-export async function createConversationDev(request: CreateConversationRequest): Promise<CreateConversationResponse> {
-  if (isDevelopment) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return mockTavusResponses.createConversation;
-  }
-  return createConversation(request);
-}
-
-export async function getVideoDev(videoId: string): Promise<GetVideoResponse> {
-  if (isDevelopment) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return mockTavusResponses.getVideo;
-  }
-  return getVideo(videoId);
+/**
+ * Utility functions for common Tavus API operations
+ */
+export const tavusAPI = {
+  // Video operations
+  createVideo: (data: any) => 
+    callTavusAPI({ method: 'POST', endpoint: '/videos' }, data),
+    
+  getVideo: (videoId: string) => 
+    callTavusAPI({ method: 'GET', endpoint: `/videos/${videoId}` }),
+    
+  listVideos: (params?: Record<string, any>) => 
+    callTavusAPI({ 
+      method: 'GET', 
+      endpoint: `/videos${params ? '?' + new URLSearchParams(params).toString() : ''}` 
+    }),
+    
+  updateVideo: (videoId: string, data: any) => 
+    callTavusAPI({ method: 'PATCH', endpoint: `/videos/${videoId}` }, data),
+    
+  deleteVideo: (videoId: string) => 
+    callTavusAPI({ method: 'DELETE', endpoint: `/videos/${videoId}` }),
+  
+  // Template operations
+  createTemplate: (data: any) => 
+    callTavusAPI({ method: 'POST', endpoint: '/templates' }, data),
+  
+  getTemplate: (templateId: string) => 
+    callTavusAPI({ method: 'GET', endpoint: `/templates/${templateId}` }),
+  
+  listTemplates: () => 
+    callTavusAPI({ method: 'GET', endpoint: '/templates' }),
+  
+  // Add more Tavus API endpoints as needed
 }
