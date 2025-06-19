@@ -1,0 +1,9 @@
+{
+  "imports": {},
+  "scopes": {},
+  "permissions": {
+    "net": {
+      "hosts": ["api.tavus.io", "tavusapi.com"]
+    }
+  }
+}
