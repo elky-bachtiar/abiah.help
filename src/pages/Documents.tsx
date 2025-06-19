@@ -1,21 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  FileText, 
-  BarChart3, 
-  PresentationChart,
-  TrendingUp,
-  Calendar,
-  MoreVertical,
-  Eye,
-  Download,
-  Share2,
-  Trash2
-} from 'lucide-react';
+import { Plus, Search, Filter, FileText, BarChart3, Presentation as PresentationChart, TrendingUp, Calendar, MoreVertical, Eye, Download, Share2, Trash2 } from 'lucide-react';
 import { userAtom } from '../store/auth';
 import { Document, DocumentProgress } from '../types/Documents';
 import { Button } from '../components/ui/Button';
