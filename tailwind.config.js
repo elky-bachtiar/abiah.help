@@ -3,6 +3,9 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      ringOffsetColor: {
+        background: '#FFFFFF', // matches background.primary
+      },
       colors: {
         primary: {
           DEFAULT: '#2A2F6D',
@@ -46,6 +49,8 @@ export default {
         success: '#10B981',
         warning: '#F59E0B',
         error: '#EF4444',
+        input: '#C3C7CF',
+        ring: '#4B5AAB',
         background: {
           primary: '#FFFFFF',
           secondary: '#F8FAFC',
@@ -54,6 +59,11 @@ export default {
           primary: '#1F2937',
           secondary: '#6B7280',
         },
+        muted: {
+          foreground: '#6B7280',
+        },
+        card: '#FFFFFF',
+        'card-foreground': '#181C3B',
       },
       fontFamily: {
         inter: ['Inter', 'sans-serif'],
