@@ -5,10 +5,10 @@
 
 @layer base {
   * {
-    @apply border-border;
+    /* Removed invalid @apply border-border; */
   }
   body {
-    @apply bg-background text-foreground font-inter;
+    @apply bg-background-primary text-text-primary font-inter;
   }
 }
 
@@ -42,7 +42,9 @@
   }
 
   .hero-gradient {
-    background: linear-gradient(135deg, #2A2F6D 0%, #1a1d4a 50%, #0f1229 100%);
+    /* background: linear-gradient(135deg, #2A2F6D 0%, #1a1d4a 50%, #0f1229 100%); */
+
+    background: linear-gradient(135deg, #1a1d4a 0%, #2A2F6D 50%, #5f3fa2 80%, #a259c6 100%);
   }
 
   .video-overlay {
