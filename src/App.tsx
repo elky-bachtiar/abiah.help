@@ -13,6 +13,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Consultation } from './pages/Consultation';
+import { Documents } from './pages/Documents';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -108,6 +109,22 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <Consultation />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/documents" 
+              element={
+                <ProtectedRoute>
+                  <Documents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/documents/:id" 
+              element={
+                <ProtectedRoute>
+                  <Documents />
                 </ProtectedRoute>
               } 
             />
