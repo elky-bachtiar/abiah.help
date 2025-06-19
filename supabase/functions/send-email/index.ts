@@ -8,6 +8,7 @@ const corsHeaders = {
 interface EmailRequest {
   name: string;
   email: string;
+  subject?: string;
   company: string;
   role: string;
   message: string;
@@ -21,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { name, email, company, role, message, investmentInterest }: EmailRequest = await req.json()
+    const { name, email, company, subject,role, message, investmentInterest }: EmailRequest = await req.json()
 
     // Validate required fields
     if (!name || !email || !company || !role || !message) {
@@ -37,7 +38,7 @@ serve(async (req) => {
     // Create MIME message for Gmail API
     const timestamp = new Date().toLocaleString()
     const mimeMessage = `From: noreply@abiah.help
-To: elky.bachtiar@protonmail.com
+To: hello@abiah.help
 Subject: New Investor Inquiry - ${name} from ${company}
 Content-Type: text/html; charset=UTF-8
 
