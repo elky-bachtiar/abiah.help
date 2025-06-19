@@ -8,7 +8,7 @@ This file must include:
  - Your full answer and thoughts
  - Today’s correct date and current time
 
-3) Double-check that the date and time recorded are accurate and up to date. (new Date().toLocaleString())
+3) Double-check that the date and time recorded are accurate and up to date.
 
 4)  **Coding Standards**
    - Follow TypeScript best practices
