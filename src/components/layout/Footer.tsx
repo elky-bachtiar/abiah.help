@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
-    <footer className="bg-neutral-900 text-white py-12 mt-auto">
+    <footer className="bg-[#11131e] text-white py-12 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
@@ -18,6 +18,7 @@ export function Footer() {
               The world's first AI startup mentor platform that helps founders get funded through 
               face-to-face video consultations and intelligent document generation.
             </p>
+
             <p className="text-sm text-neutral-500">
               © 2025 Abiah.help. All rights reserved.
             </p>
@@ -78,8 +79,16 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-500">
-          <p>Built with ❤️ for startup founders worldwide</p>
+
+        <div className="flex flex-col items-center border-t border-neutral-800 mt-8 pt-8">
+          <a href='https://bolt.new/?rid=dm8ttl.'>
+            <img
+              src="/images/bolt/bolt-white_circle_360x360.png"
+              alt="Bolt Badge"
+              className="w-16 h-16 md:w-20 md:h-20 mb-2"
+              style={{ objectFit: 'contain' }}
+            />
+          </a>
         </div>
       </div>
     </footer>

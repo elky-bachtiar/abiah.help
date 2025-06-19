@@ -34,8 +34,8 @@ const features = [
   {
     id: 5,
     icon: Shield,
-    title: 'Secure & Private',
-    description: 'Enterprise-grade security with end-to-end encryption for all your sensitive startup data.',
+    title: 'Funding Readiness',
+    description: 'Get investor-ready with tailored pitch decks, business plans, and actionable feedback from your AI mentor.',
     color: 'bg-red-500',
   },
   {
