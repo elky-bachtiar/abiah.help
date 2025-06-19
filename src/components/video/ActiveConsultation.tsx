@@ -3,7 +3,12 @@ import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Camera, CameraOff, Mic, MicOff, PhoneOff, MessageSquare } from 'lucide-react';
 import { conversationScreenAtom, videoControlsAtom, sessionTimerAtom } from '../../store/consultation';
-import { createConversationDev } from '../../api/tavus';
+import { tavusAPI, callTavusAPI } from '../../api/tavus';
+
+// Local function to create a conversation
+async function createConversation(data: any) {
+  return callTavusAPI({ method: 'POST', endpoint: '/conversations', data });
+}
 import { Button } from '../ui/Button';
 import { VideoControls } from './VideoControls';
 import { SessionTimer } from './SessionTimer';
@@ -21,7 +26,7 @@ export function ActiveConsultation() {
         setIsLoading(true);
         
         // Create Tavus conversation
-        const conversation = await createConversationDev({
+        const conversation = await createConversation({
           persona_id: 'general_mentor',
           greeting: 'Hello! I\'m Abiah, your AI startup mentor. I\'m here to help you navigate the funding landscape and accelerate your startup\'s growth. What would you like to focus on today?',
           context: 'This is a startup mentorship consultation focused on funding and growth strategies.',

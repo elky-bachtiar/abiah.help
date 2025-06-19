@@ -18,21 +18,31 @@ export function Header({ className }: HeaderProps) {
   const [initials] = useAtom(userInitialsAtom);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = React.useState(false);
 
+  // Add handleSignOut function
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
+    await signOut();
+    navigate('/login');
   };
 
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className={cn(
-      'bg-white border-b border-neutral-200 shadow-sm sticky top-0 z-50',
-      className
-    )}>
+    <header
+      className={cn(
+        'sticky top-0 z-50 border-b border-neutral-200 shadow-sm transition-colors duration-500',
+        scrolled ? 'bg-white' : 'bg-transparent',
+        className
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
