@@ -35,6 +35,7 @@ export const consultationScreensAtom = atom<ConsultationScreen[]>([
   { id: '4', name: 'conversation', title: 'Consultation', isActive: false },
   { id: '5', name: 'summary', title: 'Summary', isActive: false },
   { id: '6', name: 'error', title: 'Error', isActive: false },
+  { id: '7', name: 'deviceTest', title: 'Test', isActive: false}
 ]);
 
 // Derived atoms
@@ -42,6 +43,11 @@ export const currentScreenAtom = atom<ConsultationScreen | null>((get) => {
   const screens = get(consultationScreensAtom);
   const currentName = get(conversationScreenAtom);
   return screens.find(screen => screen.name === currentName) || null;
+});
+
+export const consultationContextAtom = atom({
+  custom_greeting: '',
+  conversational_context: ''
 });
 
 export const sessionTimeRemainingAtom = atom<string>((get) => {

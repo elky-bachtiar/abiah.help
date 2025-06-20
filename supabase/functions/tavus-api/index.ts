@@ -8,22 +8,126 @@ const TAVUS_API_URL = 'https://tavusapi.com'
 console.log("[DEBUG] Edge Function loaded. TAVUS_API_KEY present:", !!TAVUS_API_KEY);
 
 interface TavusRequest {
-  method: 'GET' | 'POST';
-  endpoint: string;
-  payload?: any;
-  headers?: Record<string, string>;
+  method: string
+  endpoint: string
+  payload?: any
+  headers?: Record<string, string>
 }
 
-// CORS headers with COOP and COEP support
+// Simple CORS headers like in the send-email function
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-  'Cross-Origin-Embedder-Policy': 'require-corp',
-  'Cross-Origin-Opener-Policy': 'same-origin',
-  'Cross-Origin-Resource-Policy': 'cross-origin',
-  'Access-Control-Allow-Credentials': 'true'
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
+
+serve(async (req) => {
+  console.log('[DEBUG] Edge Function received request:', {
+    method: req.method,
+    url: req.url
+  });
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    // Log headers for debugging
+    console.log('[DEBUG] Request headers:', Object.fromEntries(req.headers.entries()));
+    
+    // Parse the request body
+    let requestBody: TavusRequest;
+    try {
+      requestBody = await req.json();
+      console.log('[DEBUG] Request body parsed:', requestBody);
+    } catch (error) {
+      console.error('[DEBUG] Error parsing JSON request:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON request' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Basic validation
+    if (!requestBody || !requestBody.endpoint) {
+      return new Response(
+        JSON.stringify({ error: 'Missing endpoint in request' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Prepare headers for Tavus API request
+    const tavusHeaders = {
+      'Content-Type': 'application/json',
+      'x-api-key': TAVUS_API_KEY
+    };
+
+    // Add any custom headers from the request
+    if (requestBody.headers) {
+      Object.assign(tavusHeaders, requestBody.headers);
+    }
+
+    console.log('[DEBUG] Calling Tavus API:', {
+      url: TAVUS_API_URL + requestBody.endpoint,
+      method: requestBody.method
+    });
+
+    // Call the Tavus API
+    const response = await fetch(TAVUS_API_URL + requestBody.endpoint, {
+      method: requestBody.method,
+      headers: tavusHeaders,
+      body: requestBody.payload ? JSON.stringify(requestBody.payload) : undefined
+    });
+
+    console.log('[DEBUG] Tavus API response status:', response.status);
+    console.log('[DEBUG] Tavus API response headers:', Object.fromEntries(response.headers.entries()));
+
+    // Get response as text first
+    const responseText = await response.text();
+    console.log('[DEBUG] Tavus API response text:', responseText);
+
+    // Try to parse as JSON
+    let responseData;
+    try {
+      responseData = responseText ? JSON.parse(responseText) : null;
+    } catch (e) {
+      // Return raw text if not JSON
+      return new Response(
+        responseText,
+        { 
+          status: response.status, 
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' } 
+        }
+      );
+    }
+
+    // Return the JSON response
+    return new Response(
+      JSON.stringify({ data: responseData }),
+      { 
+        status: 200,  // Always return 200 from the Edge Function
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+
+  } catch (error) {
+    console.error('[DEBUG] Edge Function error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+})
 
 /**
  * Create a standardized error response
@@ -159,17 +263,9 @@ async function handleGetRequest(req: Request): Promise<Response> {
 /**
  * Handle POST requests to Tavus API
  */
-async function handlePostRequest(req: Request): Promise<Response> {
+async function handlePostRequest(req: Request, requestBody: TavusRequest): Promise<Response> {
   try {
-    // Parse the JSON request body
-    let requestBody: TavusRequest;
-    try {
-      requestBody = await req.json();
-      console.log('[DEBUG] Request body parsed:', requestBody);
-    } catch (error) {
-      console.error('[DEBUG] Error parsing JSON request:', error);
-      return createErrorResponse('Invalid JSON request');
-    }
+    console.log('[DEBUG] Request body parsed:', requestBody);
 
     // Basic validation
     if (!requestBody || !requestBody.endpoint) {
@@ -189,10 +285,18 @@ async function handlePostRequest(req: Request): Promise<Response> {
       Object.assign(tavusHeaders, requestBody.headers);
     }
 
-    console.log('[DEBUG] Calling Tavus API:', {
-      url: TAVUS_API_URL + requestBody.endpoint,
-      method: requestBody.method
+    // Extra debug: log the full payload, endpoint, and headers
+    console.log('[DEBUG] Tavus API request details:', {
+      endpoint: requestBody.endpoint,
+      method: requestBody.method,
+      payload: requestBody.payload,
+      headers: tavusHeaders
     });
+
+    // Check for API key presence
+    if (!tavusHeaders['x-api-key'] || tavusHeaders['x-api-key'] === 'undefined') {
+      console.error('[ERROR] Tavus API key is missing or undefined!');
+    }
 
     // Call the Tavus API
     const response = await fetch(TAVUS_API_URL + requestBody.endpoint, {
@@ -221,161 +325,3 @@ async function handlePostRequest(req: Request): Promise<Response> {
     return createErrorResponse(error.message, 500);
   }
 }
-
-serve(async (req) => {
-  console.log('[DEBUG] Edge Function received request:', {
-    method: req.method,
-    url: req.url
-  });
-  
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  } 
-  // All API requests come in as POST with a JSON body specifying the actual method
-  else if (req.method === 'POST') {
-    try {
-      console.log('[DEBUG] Processing POST request');
-      
-      // Parse the request body
-      let requestBody: TavusRequest;
-      try {
-        requestBody = await req.json();
-        console.log('[DEBUG] Request body parsed:', requestBody);
-      } catch (error) {
-        console.error('[DEBUG] Error parsing JSON request:', error);
-        
-        // Attempt to get the raw body as a fallback
-        const rawText = await req.text();
-        console.log('[DEBUG] Raw request body:', rawText);
-        
-        return createErrorResponse('Invalid JSON request: ' + error.message);
-      }
-      
-      // Now process based on the method specified in the request body
-      if (!requestBody || !requestBody.method) {
-        return createErrorResponse('Missing method in request body');
-      }
-      
-      // Route based on the method in the request body
-      if (requestBody.method === 'GET') {
-        console.log('[DEBUG] Proxying GET request to Tavus API');
-        
-        // Get API headers
-        let tavusHeaders;
-        try {
-          tavusHeaders = prepareTavusHeaders(req);
-        } catch (error) {
-          return createErrorResponse(error.message, 401);
-        }
-        
-        if (!requestBody.endpoint) {
-          return createErrorResponse('Missing endpoint in request');
-        }
-        
-        // Determine if the endpoint is a full URL or just a path
-        let apiUrl;
-        if (requestBody.endpoint.startsWith('http')) {
-          // If it's a full URL, use it as is
-          apiUrl = requestBody.endpoint;
-        } else {
-          // Otherwise, prepend the base URL
-          apiUrl = `${TAVUS_API_URL}${requestBody.endpoint}`;
-        }
-        
-        console.log(`[DEBUG] Calling API: ${apiUrl}`);
-        
-        // Set up headers for Tavus API
-        const headers = new Headers({
-          'x-api-key': TAVUS_API_KEY,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        });
-        
-        // Log the headers we're sending
-        console.log('[DEBUG] Request headers:', JSON.stringify(Object.fromEntries(headers), null, 2));
-        
-        try {
-          const response = await fetch(apiUrl, {
-            method: requestBody.method,
-            headers: headers,
-            // Only include body for non-GET requests
-            ...(requestBody.method !== 'GET' && requestBody.payload && { 
-              body: JSON.stringify(requestBody.payload) 
-            })
-          });
-
-          console.log(`[DEBUG] Response status: ${response.status}`);
-          
-          // Get response headers for debugging
-          const responseHeaders = Object.fromEntries(response.headers.entries());
-          console.log('[DEBUG] Response headers:', JSON.stringify(responseHeaders, null, 2));
-
-          // Get response text first to log it
-          const responseText = await response.text();
-          console.log('[DEBUG] Raw response:', responseText.slice(0, 500)); // Log first 500 chars
-
-          // Try to parse as JSON, fall back to text if it fails
-          let responseData;
-          try {
-            responseData = responseText ? JSON.parse(responseText) : null;
-          } catch (e) {
-            console.error('[ERROR] Failed to parse response as JSON:', e);
-            responseData = responseText;
-          }
-          
-          // If the response is not OK, include the status in the response
-          if (!response.ok) {
-            console.error(`[ERROR] Tavus API error: ${response.status} ${response.statusText}`, responseData);
-            return new Response(JSON.stringify({
-              error: 'Tavus API error',
-              status: response.status,
-              statusText: response.statusText,
-              data: responseData
-            }), {
-              status: response.status,
-              headers: { 
-                ...corsHeaders, 
-                'Content-Type': 'application/json'
-              }
-            });
-          }
-          
-          // Successful response
-          return new Response(JSON.stringify(responseData), {
-            status: 200,
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json'
-            }
-          });
-          
-        } catch (error) {
-          console.error('[ERROR] Error calling Tavus API:', error);
-          return createErrorResponse(`Failed to call Tavus API: ${error.message}`, 500);
-        }
-      } 
-      else if (requestBody.method === 'POST') {
-        // Original POST logic
-        return await handlePostRequest(req);
-      }
-      else {
-        return createErrorResponse(`Method ${requestBody.method} not supported in request body`);
-      }
-    } catch (error) {
-      console.error('[DEBUG] Error processing request:', error);
-      return createErrorResponse(error.message, 500);
-    }
-  } 
-  // Direct GET requests (these should be rare)
-  else if (req.method === 'GET') {
-    return await handleGetRequest(req);
-  }
-  // Handle unsupported methods
-  else {
-    return createErrorResponse(
-      `Method ${req.method} not supported. Supported methods are GET, POST and OPTIONS.`,
-      405
-    );
-  }
-})

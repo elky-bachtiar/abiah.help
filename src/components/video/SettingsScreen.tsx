@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Camera, Mic, Settings, ArrowRight, AlertCircle } from 'lucide-react';
-import { conversationScreenAtom, videoControlsAtom } from '../../store/consultation';
+import { conversationScreenAtom, videoControlsAtom, consultationContextAtom } from '../../store/consultation';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
@@ -13,6 +13,7 @@ export function SettingsScreen() {
   const [focusArea, setFocusArea] = useState('');
   const [specificQuestions, setSpecificQuestions] = useState('');
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const setConsultationContext = useSetAtom(consultationContextAtom);
 
   const handleDeviceCheck = async () => {
     try {
@@ -37,8 +38,24 @@ export function SettingsScreen() {
     }
     
     // Save context data here if needed
-    console.log('Consultation context:', { focusArea, specificQuestions });
-    
+    // Use a friendly default greeting if focusArea looks like a topic (e.g., 'pitch-deck')
+    const isLikelyTopic = (text: string) => {
+      if (!text) return true;
+      // If it's very short or one/two words, or matches common topic keywords
+      const topicKeywords = ['pitch-deck', 'funding', 'growth', 'marketing', 'sales', 'product'];
+      const words = text.trim().split(/\s+/);
+      if (words.length <= 2) return true;
+      if (topicKeywords.some(keyword => text.toLowerCase().includes(keyword))) return true;
+      // If it doesn't end with punctuation or is not a sentence
+      if (!/[.!?]$/.test(text.trim())) return true;
+      return false;
+    };
+    setConsultationContext({
+      custom_greeting: isLikelyTopic(focusArea)
+        ? "Hello! I'm Abiah, your AI startup mentor. I'm here to help you navigate the funding landscape and accelerate your startup's growth. What would you like to focus on today?"
+        : focusArea,
+      conversational_context: specificQuestions || 'This is a startup mentorship consultation focused on funding and growth strategies.'
+    });
     setCurrentScreen('conversation');
   };
 
