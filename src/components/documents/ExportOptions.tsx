@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Download, FileText, Image, Share2, Mail, Link } from 'lucide-react';
+import { X, Download, FileText, Image, Share2, Mail, Link, ExternalLink } from 'lucide-react';
 import { Document } from '../../types/Documents';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/Button-bkp';
 import { Card } from '../ui/Card';
 
 interface ExportOptionsProps {
@@ -163,7 +163,7 @@ export function ExportOptions({ document, onClose }: ExportOptionsProps) {
           <Button
             onClick={handleExport}
             loading={isExporting}
-            disabled={isExporting}
+            disabled={isExporting} 
             className="w-full"
           >
             <Download className="w-4 h-4 mr-2" />
@@ -174,7 +174,7 @@ export function ExportOptions({ document, onClose }: ExportOptionsProps) {
           <div className="border-t border-neutral-200 pt-6">
             <label className="block text-sm font-medium text-primary mb-3">
               Share Document
-            </label>
+            </label> 
             <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
@@ -191,6 +191,14 @@ export function ExportOptions({ document, onClose }: ExportOptionsProps) {
               >
                 <Mail className="w-4 h-4 mr-2" />
                 Email
+              </Button>
+            </div>
+            
+            {/* Investor Deck Link */}
+            <div className="mt-4 pt-4 border-t border-neutral-200">
+              <Button variant="outline" className="w-full" onClick={() => window.open('https://investor-deck.abiah.help/', '_blank')}>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Investor Deck
               </Button>
             </div>
           </div>

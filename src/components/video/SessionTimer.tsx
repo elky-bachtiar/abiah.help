@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Clock } from 'lucide-react';
-import { sessionTimerAtom } from '../../store/consultation';
+import { sessionTimerAtom } from '../../store/consultation'; 
 import { formatDuration } from '../../lib/utils';
 
 export function SessionTimer() {
@@ -15,7 +15,7 @@ export function SessionTimer() {
         setSessionTimer(prev => {
           const elapsed = Math.floor((Date.now() - prev.startTime.getTime()) / 1000);
           const remaining = Math.max(0, prev.remainingTime - elapsed);
-          
+           
           return {
             ...prev,
             duration: elapsed,
@@ -40,7 +40,7 @@ export function SessionTimer() {
       <div className="text-center">
         <div className="text-white/60 text-xs uppercase tracking-wide">Elapsed</div>
         <div className="text-white font-mono text-lg">{timeElapsed}</div>
-      </div>
+      </div> 
 
       {/* Timer Icon */}
       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${

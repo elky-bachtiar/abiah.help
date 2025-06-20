@@ -2,7 +2,7 @@ import React from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Video, FileText, BarChart3, Calendar, ArrowRight, Clock, CheckCircle } from 'lucide-react';
-import { userDisplayNameAtom } from '../store/auth';
+import { userDisplayNameAtom } from '../store/auth'; 
 import { Button } from '../components/ui/Button-bkp';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 
@@ -77,7 +77,7 @@ export function Dashboard() {
           <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
             Welcome back, {displayName}!
           </h1>
-          <p className="text-text-secondary text-lg">
+          <p className="text-text-secondary text-lg"> 
             Ready to accelerate your startup's growth? Let's continue building your success.
           </p>
         </motion.div>
@@ -86,7 +86,7 @@ export function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.2 }} 
           className="mb-8"
         >
           <Card className="bg-gradient-to-r from-primary to-primary-800 text-white">

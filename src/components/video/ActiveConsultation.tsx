@@ -3,7 +3,7 @@ import { useAtom } from 'jotai';
 import { useDaily, useLocalSessionId, useParticipantIds, useVideoTrack, useAudioTrack } from '@daily-co/daily-react';
 import { conversationScreenAtom, videoControlsAtom, sessionTimerAtom, consultationContextAtom } from '../../store/consultation';
 import { createConversation } from '../../api/createConversation';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/Button-bkp';
 import { VideoControls } from './VideoControls';
 import { SessionTimer } from './SessionTimer';
 
@@ -52,7 +52,10 @@ export function ActiveConsultation() {
     const initializeConsultation = async () => {
       try {
         setIsLoading(true);
+        
+        // Create Tavus conversation with context from settings screen
         const conversation = await createConversation();
+        
         setConversationUrl(conversation.conversation_url);
 
         // Join the Daily call
@@ -69,7 +72,8 @@ export function ActiveConsultation() {
         }));
         setIsLoading(false);
       } catch (error) {
-        setCurrentScreen('error');
+        console.error('Failed to initialize consultation:', error);
+        setCurrentScreen('error'); 
       }
     };
 
@@ -93,7 +97,15 @@ export function ActiveConsultation() {
   }, [daily, setCurrentScreen]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-white/20 border-t-secondary rounded-full mx-auto mb-4" /> 
+          <h2 className="text-2xl font-bold text-white mb-2">Connecting to your AI mentor...</h2>
+          <p className="text-white/70">This may take a moment</p>
+        </div>
+      </div>
+    );
   }
 
   return (

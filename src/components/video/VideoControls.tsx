@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { Camera, CameraOff, Mic, MicOff, PhoneOff, Settings, MoreHorizontal } from 'lucide-react';
-import { videoControlsAtom } from '../../store/consultation';
+import { videoControlsAtom } from '../../store/consultation'; 
 
 interface VideoControlsProps {
   onToggleCamera: () => void;
@@ -17,7 +17,7 @@ export function VideoControls({ onToggleCamera, onToggleMic, onEndCall }: VideoC
       <div className="flex items-center gap-3 bg-black/70 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
         {/* Camera Toggle */}
         <button
-          onClick={onToggleCamera}
+          onClick={onToggleCamera} 
           className={`video-control-btn ${videoControls.isCameraOn ? 'bg-white/20' : 'bg-red-500'}`}
           aria-label={videoControls.isCameraOn ? 'Turn off camera' : 'Turn on camera'}
         >

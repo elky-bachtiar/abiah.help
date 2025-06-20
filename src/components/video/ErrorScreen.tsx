@@ -2,8 +2,8 @@ import React from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { AlertTriangle, RefreshCw, Home, HelpCircle } from 'lucide-react';
-import { conversationScreenAtom } from '../../store/consultation';
-import { Button } from '../ui/Button';
+import { conversationScreenAtom } from '../../store/consultation'; 
+import { Button } from '../ui/Button-bkp';
 import { Card } from '../ui/Card';
 
 interface ErrorScreenProps {
@@ -17,7 +17,7 @@ export function ErrorScreen({ message, onRetry }: ErrorScreenProps) {
   const handleRetry = () => {
     if (onRetry) {
       onRetry();
-    } else {
+    } else { 
       setCurrentScreen('intro');
     }
   };
@@ -42,7 +42,7 @@ export function ErrorScreen({ message, onRetry }: ErrorScreenProps) {
           <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertTriangle className="w-10 h-10 text-red-400" />
           </div>
-          
+           
           {/* Error Message */}
           <h2 className="text-3xl font-bold mb-4">
             Oops! Something went wrong

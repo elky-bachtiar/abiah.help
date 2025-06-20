@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { ArrowRight, Play, Shield, Zap, Users, Target } from 'lucide-react';
-import { userDisplayNameAtom, isAuthenticatedAtom } from '../../store/auth';
-import { Button } from '../ui/Button';
+import { userDisplayNameAtom, isAuthenticatedAtom } from '../../store/auth'; 
+import { Button } from '../ui/Button-bkp';
 import { TavusVideoWelcome } from './TavusVideoWelcome';
 import { ScrollIndicator } from './ScrollIndicator';
 import { FeatureGrid } from './FeatureGrid';
@@ -15,7 +15,7 @@ export function HeroSection() {
   const [videoReady, setVideoReady] = useState(false);
 
   const greeting = isAuthenticated 
-    ? `Welcome back, ${displayName}!`
+    ? `Welcome back, ${displayName}!` 
     : 'Meet Abiah, Your AI Startup Mentor';
 
   const subtitle = isAuthenticated
@@ -43,7 +43,7 @@ export function HeroSection() {
             <motion.h1 
               className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
               initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={{ opacity: 1, y: 0 }} 
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               {greeting}

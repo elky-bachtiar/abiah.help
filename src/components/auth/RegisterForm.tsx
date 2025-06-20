@@ -5,8 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
+import { Button } from '../ui/Button-bkp';
+import { Input } from '../ui/Input-bkp';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { SocialLoginButtons } from './SocialLoginButtons';
 
@@ -54,7 +54,7 @@ export function RegisterForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-primary">Create Account</CardTitle>
+        <CardTitle className="text-2xl font-bold text-primary">Create Account</CardTitle> 
         <p className="text-text-secondary">Start your AI mentorship journey</p>
       </CardHeader>
       <CardContent>
@@ -69,7 +69,7 @@ export function RegisterForm() {
             <div className="relative">
               <Input
                 {...register('firstName')}
-                type="text"
+                type="text" 
                 label="First Name"
                 placeholder="John"
                 error={errors.firstName?.message}
@@ -80,7 +80,7 @@ export function RegisterForm() {
             <div className="relative">
               <Input
                 {...register('lastName')}
-                type="text"
+                type="text" 
                 label="Last Name"
                 placeholder="Doe"
                 error={errors.lastName?.message}

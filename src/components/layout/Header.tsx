@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import { Link, useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, Video } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { User, LogOut, Settings, Video, Menu, X } from 'lucide-react';
 import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom } from '../../store/auth';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../ui/Button';
@@ -14,10 +14,12 @@ interface HeaderProps {
 export function Header({ className }: HeaderProps) {
   const [user] = useAtom(userAtom);
   const [isAuthenticated] = useAtom(isAuthenticatedAtom);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [displayName] = useAtom(userDisplayNameAtom);
   const [initials] = useAtom(userInitialsAtom);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = React.useState(false);
 
   // Add handleSignOut function
@@ -34,6 +36,11 @@ export function Header({ className }: HeaderProps) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+  
+  // Close mobile menu when route changes
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <header
@@ -54,7 +61,7 @@ export function Header({ className }: HeaderProps) {
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
             {isAuthenticated ? (
               <>
                 <Link 
@@ -81,7 +88,7 @@ export function Header({ className }: HeaderProps) {
           </nav>
 
           {/* User Menu / Auth Buttons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             {isAuthenticated && user ? (
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-text-secondary hidden sm:block">
@@ -134,7 +141,7 @@ export function Header({ className }: HeaderProps) {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="hidden md:flex items-center space-x-3">
                 <Link to="/login">
                   <Button variant="ghost" size="sm">
                     Sign In
@@ -147,8 +154,73 @@ export function Header({ className }: HeaderProps) {
                 </Link>
               </div>
             )}
+            
+            {/* Mobile Menu Button */}
+            <button 
+              className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6 text-primary" />
+              ) : (
+                <Menu className="w-6 h-6 text-primary" />
+              )}
+            </button>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden py-4 px-4 border-t border-neutral-200">
+            {isAuthenticated ? (
+              <div className="space-y-3">
+                <Link 
+                  to="/dashboard" 
+                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  to="/consultation" 
+                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors flex items-center gap-1"
+                >
+                  <Video className="w-4 h-4" />
+                  Consultation
+                </Link>
+                <Link 
+                  to="/documents" 
+                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors"
+                >
+                  Documents
+                </Link>
+                <hr className="border-neutral-200 my-2" />
+                <button
+                  onClick={handleSignOut}
+                  className="block w-full text-left py-2 px-3 rounded-lg hover:bg-neutral-100 text-error hover:text-error/80 transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Link 
+                  to="/login" 
+                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="block py-2 px-3 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-center"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

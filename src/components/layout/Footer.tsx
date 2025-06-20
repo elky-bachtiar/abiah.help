@@ -79,16 +79,17 @@ export function Footer() {
           </div>
         </div>
 
-
         <div className="flex flex-col items-center border-t border-neutral-800 mt-8 pt-8">
-          <a href='https://bolt.new/?rid=dm8ttl.'>
-            <img
-              src="/images/bolt/bolt-white_circle_360x360.png"
-              alt="Bolt Badge"
-              className="w-16 h-16 md:w-20 md:h-20 mb-2"
-              style={{ objectFit: 'contain' }}
-            />
-          </a>
+          <div className="flex justify-center">
+            <a href='https://bolt.new/?rid=dm8ttl.' target="_blank" rel="noopener noreferrer">
+              <img
+                src="/images/bolt/bolt-white_circle_360x360.png"
+                alt="Bolt Badge"
+                className="w-12 h-12 md:w-16 md:h-16"
+                style={{ objectFit: 'contain' }}
+              />
+            </a>
+          </div>
         </div>
       </div>
     </footer>

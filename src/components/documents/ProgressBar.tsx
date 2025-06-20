@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, Target } from 'lucide-react';
 import { cn } from '../../lib/utils';
-
+  
 interface ProgressBarProps {
   percentage: number;
   totalSections: number;
@@ -23,7 +23,7 @@ export function ProgressBar({
   const formatTime = (minutes: number) => {
     if (minutes < 60) return `${Math.round(minutes)}m`;
     const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
+    const mins = Math.round(minutes % 60); 
     return `${hours}h ${mins}m`;
   };
 
@@ -37,7 +37,7 @@ export function ProgressBar({
         <div className="text-2xl font-bold text-primary">
           {Math.round(percentage)}%
         </div>
-      </div>
+      </div> 
 
       {/* Progress Bar */}
       <div className="mb-4">
