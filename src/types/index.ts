@@ -76,7 +76,7 @@ export interface FeatureItem {
 
 export interface ConsultationScreen {
   id: string;
-  name: 'intro' | 'loading' | 'settings' | 'conversation' | 'summary' | 'error';
+  name: 'intro' | 'loading' | 'settings' | 'conversation' | 'summary' | 'error', 'deviceTest';
   title: string;
   isActive: boolean;
 }

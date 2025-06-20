@@ -3,7 +3,7 @@ import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Video, FileText, BarChart3, Calendar, ArrowRight, Clock, CheckCircle } from 'lucide-react';
 import { userDisplayNameAtom } from '../store/auth';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/ui/Button-bkp';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 
 export function Dashboard() {
