@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/Button-bkp';
 
 export function SocialLoginButtons() {
   const { signInWithProvider, isLoading } = useAuth();
@@ -24,7 +24,7 @@ export function SocialLoginButtons() {
   return (
     <div className="mt-4 space-y-3">
       <Button
-        type="button"
+        type="button" 
         variant="outline"
         className="w-full justify-center"
         onClick={handleGoogleLogin}
@@ -52,7 +52,7 @@ export function SocialLoginButtons() {
       </Button>
 
       <Button
-        type="button"
+        type="button" 
         variant="outline"
         className="w-full justify-center"
         onClick={handleLinkedInLogin}

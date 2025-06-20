@@ -2,9 +2,9 @@ import React from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Video, ArrowRight, Clock, Shield, Zap } from 'lucide-react';
-import { conversationScreenAtom } from '../../store/consultation';
+import { conversationScreenAtom } from '../../store/consultation'; 
 import { userDisplayNameAtom } from '../../store/auth';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/Button-bkp';
 import { Card } from '../ui/Card';
 
 export function IntroScreen() {
@@ -12,7 +12,7 @@ export function IntroScreen() {
   const [displayName] = useAtom(userDisplayNameAtom);
 
   const handleStartConsultation = () => {
-    setCurrentScreen('loading');
+    setCurrentScreen('loading'); 
   };
 
   const features = [
@@ -44,7 +44,7 @@ export function IntroScreen() {
         <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
           <Video className="w-10 h-10 text-primary" />
         </div>
-        
+         
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
           Ready for Your AI Consultation, {displayName}?
         </h1>

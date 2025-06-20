@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Video, FileText, BarChart3, Users, Shield, Zap } from 'lucide-react';
+import { Video, FileText, BarChart3, Users, Shield, Zap } from 'lucide-react'; 
 
 const features = [
   {
@@ -14,7 +14,7 @@ const features = [
     id: 2,
     icon: FileText,
     title: 'Document Generation',
-    description: 'Automatically generate pitch decks, business plans, and financial projections tailored to your startup.',
+    description: 'Automatically generate pitch decks, business plans, and financial projections tailored to your startup.', 
     color: 'bg-green-500',
   },
   {
@@ -28,7 +28,7 @@ const features = [
     id: 4,
     icon: Users,
     title: 'Expert Network',
-    description: 'Access specialized mentors for FinTech, HealthTech, and other industry verticals.',
+    description: 'Access specialized mentors for FinTech, HealthTech, and other industry verticals.', 
     color: 'bg-orange-500',
   },
   {
@@ -42,7 +42,7 @@ const features = [
     id: 6,
     icon: Zap,
     title: 'Real-time Guidance',
-    description: 'Get instant feedback and recommendations during consultations and document creation.',
+    description: 'Get instant feedback and recommendations during consultations and document creation.', 
     color: 'bg-yellow-500',
   },
 ];

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Download, 
-  Share2, 
+  Share2,
+  ExternalLink,
   BookOpen, 
   CheckCircle2, 
   Circle,
@@ -124,7 +125,7 @@ export function DocumentViewer({ document, onProgressUpdate, className }: Docume
           <div>
             <h1 className="text-3xl font-bold text-primary mb-2">{document.title}</h1>
             <div className="flex items-center text-text-secondary text-sm">
-              <BookOpen className="w-4 h-4 mr-2" />
+              <BookOpen className="w-4 h-4 mr-2" /> 
               <span>{document.content.metadata.company_name}</span>
               <span className="mx-2">•</span>
               <span>{document.content.metadata.industry}</span>
@@ -163,7 +164,7 @@ export function DocumentViewer({ document, onProgressUpdate, className }: Docume
         {/* Table of Contents */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg border border-neutral-200 p-4 sticky top-6">
-            <h3 className="font-semibold text-primary mb-4 flex items-center">
+            <h3 className="font-semibold text-primary mb-4 flex items-center"> 
               <BookOpen className="w-4 h-4 mr-2" />
               Table of Contents
             </h3>
@@ -209,6 +210,14 @@ export function DocumentViewer({ document, onProgressUpdate, className }: Docume
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
+                onClick={() => window.open('https://investor-deck.abiah.help/', '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Investor Deck
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 className="border-b border-neutral-200 last:border-b-0"
               >
                 <div className="p-6">
@@ -224,7 +233,7 @@ export function DocumentViewer({ document, onProgressUpdate, className }: Docume
                         <ChevronRight className="w-5 h-5 text-text-secondary mr-2" />
                       )}
                       <h2 className="text-xl font-semibold text-primary group-hover:text-primary/80 transition-colors">
-                        {section.title}
+                        {section.title} 
                       </h2>
                     </button>
                     
@@ -266,7 +275,7 @@ export function DocumentViewer({ document, onProgressUpdate, className }: Docume
                       <div 
                         dangerouslySetInnerHTML={{ __html: section.content }}
                         className="text-text-primary leading-relaxed"
-                      />
+                      /> 
                       
                       {/* Subsections */}
                       {section.subsections && section.subsections.length > 0 && (

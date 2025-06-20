@@ -5,7 +5,7 @@ import { Plus, Search, Filter, FileText, BarChart3, Presentation as Presentation
 import { userAtom } from '../store/auth';
 import { Document, DocumentProgress } from '../types/Documents';
 import { Button } from '../components/ui/Button-bkp';
-import { Input } from '../components/ui/Input-bkp';
+import { Input } from '../components/ui/Input-bkp'; 
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { ProgressBar } from '../components/documents/ProgressBar';
 import { DocumentViewer } from '../components/documents/DocumentViewer';
@@ -122,7 +122,7 @@ export function Documents() {
   const [documents, setDocuments] = useState<Document[]>(mockDocuments);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showGenerator, setShowGenerator] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); 
   const [filterType, setFilterType] = useState<string>('all');
 
   // Filter documents based on search and type
@@ -154,7 +154,7 @@ export function Documents() {
   const getDocumentTypeLabel = (type: string) => {
     switch (type) {
       case 'business_plan': return 'Business Plan';
-      case 'pitch_deck': return 'Pitch Deck';
+      case 'pitch_deck': return 'Pitch Deck'; 
       case 'financial_projections': return 'Financial Projections';
       case 'market_analysis': return 'Market Analysis';
       case 'executive_summary': return 'Executive Summary';

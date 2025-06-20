@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, Cpu, Video } from 'lucide-react';
-import { conversationScreenAtom } from '../../store/consultation';
+import { conversationScreenAtom } from '../../store/consultation'; 
 import { LoadingSpinner, LoadingDots } from '../ui/LoadingSpinner';
 
 const loadingSteps = [
   { id: 1, text: 'Initializing AI mentor...', icon: Cpu, duration: 2000 },
   { id: 2, text: 'Preparing video connection...', icon: Video, duration: 1500 },
   { id: 3, text: 'Setting up consultation room...', icon: Clock, duration: 1000 },
-  { id: 4, text: 'Ready to begin!', icon: CheckCircle, duration: 500 },
+  { id: 4, text: 'Ready to begin!', icon: CheckCircle, duration: 500 }, 
 ];
 
 export function LoadingScreen() {
@@ -34,7 +34,7 @@ export function LoadingScreen() {
       
       // After all steps complete, move to settings
       setTimeout(() => {
-        setCurrentScreen('settings');
+        setCurrentScreen('settings'); 
       }, 500);
     };
 
@@ -57,7 +57,7 @@ export function LoadingScreen() {
         <div className="mb-8">
           <div className="w-24 h-24 mx-auto mb-6 relative">
             <LoadingSpinner size="lg" />
-            <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-pulse" />
+            <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-pulse" /> 
           </div>
           
           <h2 className="text-3xl font-bold text-white mb-4">

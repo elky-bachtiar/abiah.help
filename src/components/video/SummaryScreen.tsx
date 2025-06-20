@@ -2,9 +2,9 @@ import React from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { CheckCircle, Download, Calendar, ArrowRight, Star, Clock, Target } from 'lucide-react';
-import { conversationScreenAtom, sessionTimerAtom } from '../../store/consultation';
+import { conversationScreenAtom, sessionTimerAtom } from '../../store/consultation'; 
 import { userDisplayNameAtom } from '../../store/auth';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/Button-bkp';
 import { Card } from '../ui/Card';
 import { formatDuration } from '../../lib/utils';
 
@@ -16,7 +16,7 @@ export function SummaryScreen() {
   const sessionDuration = formatDuration(sessionTimer.duration);
 
   const keyInsights = [
-    {
+    { 
       title: 'Market Validation',
       insight: 'Focus on validating your target market through customer interviews and MVP testing.',
       priority: 'high',
@@ -26,7 +26,7 @@ export function SummaryScreen() {
       insight: 'Consider implementing a freemium model to accelerate user acquisition.',
       priority: 'medium',
     },
-    {
+    { 
       title: 'Competitive Advantage',
       insight: 'Strengthen your moat by building network effects into your platform.',
       priority: 'high',
@@ -67,7 +67,7 @@ export function SummaryScreen() {
         <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="w-10 h-10 text-white" />
         </div>
-        
+         
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
           Great Session, {displayName}!
         </h1>

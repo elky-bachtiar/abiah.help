@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Presentation as PresentationChart, BarChart3, TrendingUp, FileDigit, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { Document, DocumentContent } from '../../types/Documents';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
+import { Button } from '../ui/Button-bkp';
+import { Input } from '../ui/Input-bkp';
 import { Card, CardContent } from '../ui/Card';
 
 interface DocumentGeneratorProps {
@@ -29,7 +29,7 @@ export function DocumentGenerator({ onDocumentGenerated }: DocumentGeneratorProp
   const documentTypes = [
     {
       id: 'business_plan',
-      title: 'Business Plan',
+      title: 'Business Plan', 
       description: 'Comprehensive business plan with executive summary, market analysis, and financial projections',
       icon: FileText,
       color: 'bg-blue-100 text-blue-600',
@@ -44,21 +44,21 @@ export function DocumentGenerator({ onDocumentGenerated }: DocumentGeneratorProp
     {
       id: 'executive_summary',
       title: 'Executive Summary',
-      description: 'Concise overview of your business plan for quick review',
+      description: 'Concise overview of your business plan for quick review', 
       icon: FileDigit,
       color: 'bg-purple-100 text-purple-600',
     },
     {
       id: 'market_analysis',
       title: 'Market Analysis',
-      description: 'Detailed analysis of your target market, competition, and opportunity',
+      description: 'Detailed analysis of your target market, competition, and opportunity', 
       icon: TrendingUp,
       color: 'bg-orange-100 text-orange-600',
     },
     {
       id: 'financial_projections',
       title: 'Financial Projections',
-      description: 'Financial forecasts, unit economics, and funding requirements',
+      description: 'Financial forecasts, unit economics, and funding requirements', 
       icon: BarChart3,
       color: 'bg-red-100 text-red-600',
     },

@@ -5,8 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
+import { Button } from '../ui/Button-bkp';
+import { Input } from '../ui/Input-bkp';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { SocialLoginButtons } from './SocialLoginButtons';
 
@@ -42,7 +42,7 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-primary">Welcome Back</CardTitle>
+        <CardTitle className="text-2xl font-bold text-primary">Welcome Back</CardTitle> 
         <p className="text-text-secondary">Sign in to your Abiah.help account</p>
       </CardHeader>
       <CardContent>
@@ -56,7 +56,7 @@ export function LoginForm() {
           <div className="relative">
             <Input
               {...register('email')}
-              type="email"
+              type="email" 
               label="Email"
               placeholder="Enter your email"
               error={errors.email?.message}
@@ -68,7 +68,7 @@ export function LoginForm() {
           <div className="relative">
             <Input
               {...register('password')}
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? 'text' : 'password'} 
               label="Password"
               placeholder="Enter your password"
               error={errors.password?.message}

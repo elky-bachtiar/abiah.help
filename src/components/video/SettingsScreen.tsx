@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Camera, Mic, Settings, ArrowRight, AlertCircle } from 'lucide-react';
-import { conversationScreenAtom, videoControlsAtom, consultationContextAtom } from '../../store/consultation';
-import { Button } from '../ui/Button';
+import { conversationScreenAtom, videoControlsAtom, consultationContextAtom } from '../../store/consultation'; 
+import { Button } from '../ui/Button-bkp';
 import { Card } from '../ui/Card';
-import { Input } from '../ui/Input';
+import { Input } from '../ui/Input-bkp';
 
 export function SettingsScreen() {
   const [, setCurrentScreen] = useAtom(conversationScreenAtom);
   const [videoControls, setVideoControls] = useAtom(videoControlsAtom);
   const [focusArea, setFocusArea] = useState('');
-  const [specificQuestions, setSpecificQuestions] = useState('');
+  const [specificQuestions, setSpecificQuestions] = useState(''); 
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const setConsultationContext = useSetAtom(consultationContextAtom);
 
