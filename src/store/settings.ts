@@ -8,6 +8,7 @@ interface Settings {
   context: string;
   persona: string;
   replica: string;
+  payload?: Record<string, any>; // Optional: for custom Tavus API payload overrides
 }
 
 const getInitialSettings = (): Settings => {
@@ -16,12 +17,12 @@ const getInitialSettings = (): Settings => {
     return JSON.parse(savedSettings);
   }
   return {
-    name: "",
-    language: "en",
+    name: "Abiah",
+    language: "english",
     interruptSensitivity: "medium",
     greeting: "",
     context: "",
-    persona: "",
+    persona: "pebc953c8b73",
     replica: "",
   };
 };

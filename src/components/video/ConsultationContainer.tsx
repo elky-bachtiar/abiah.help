@@ -7,9 +7,9 @@ import { SettingsScreen } from './SettingsScreen';
 import { ActiveConsultation } from './ActiveConsultation';
 import { SummaryScreen } from './SummaryScreen';
 import { ErrorScreen } from './ErrorScreen';
-
+// ...other imports
 export function ConsultationContainer() {
-  const [currentScreen] = useAtom(currentScreenAtom);
+  const [currentScreen, setCurrentScreen] = useAtom(currentScreenAtom);
   
   if (!currentScreen) {
     return <ErrorScreen message="Invalid consultation screen" />;

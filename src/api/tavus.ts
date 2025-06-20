@@ -31,6 +31,8 @@ export async function callTavusAPI<T = any>(
   data?: Record<string, any>,
   useTestEndpoint = false
 ): Promise<T> {
+  // Debug: log the input arguments
+  console.log('[DEBUG] callTavusAPI called with:', { options, data, useTestEndpoint });
   // Handle shorthand syntax (just endpoint for GET, or endpoint + data)
   const requestOptions: TavusRequestOptions = typeof options === 'string' 
     ? { method: 'GET', endpoint: options, data }
@@ -45,18 +47,20 @@ export async function callTavusAPI<T = any>(
       headers: requestOptions.headers
     };
 
-    console.log(`Calling Tavus API (${useTestEndpoint ? 'test endpoint' : 'production endpoint'}) with:`, edgeFunctionBody);
-    
+    console.log(`[DEBUG] Tavus Edge Function (${useTestEndpoint ? 'test endpoint' : 'production endpoint'}) with:`, edgeFunctionBody);
     // Use either test or production endpoint
     const endpoint = useTestEndpoint ? 'tavus-api-test' : 'tavus-api';
     const response = await callEdgeFunction<TavusResponse<T>>(endpoint, edgeFunctionBody);
-
+    // Debug: log the raw response from the Edge Function
+    console.log('[DEBUG] Edge Function response:', response);
     if (response?.error) {
+      console.error('[DEBUG] Edge Function returned error:', response.error, response.details);
       throw new Error(
         response.error + (response.details ? `: ${JSON.stringify(response.details)}` : '')
       )
     }
-
+    // Debug: log the parsed data returned
+    console.log('[DEBUG] Tavus API parsed data:', response?.data);
     return response?.data as T
   } catch (error) {
     console.error('Tavus API Error:', error)

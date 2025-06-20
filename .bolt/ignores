@@ -1,2 +1,5 @@
 docs/*
-*.md
+src/docs/*
+
+node_modules
+dist
