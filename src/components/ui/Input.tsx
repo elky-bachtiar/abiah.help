@@ -1,56 +1,22 @@
-import React from 'react';
-import { cn } from '../../lib/utils';
+import * as React from "react"
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-}
+import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type = 'text', label, error, helperText, id, ...props }, ref) => {
-    const inputId = id || `input-${Math.random().toString(36).substring(7)}`;
-
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
     return (
-      <div className="w-full">
-        {label && (
-          <label 
-            htmlFor={inputId}
-            className="block text-sm font-medium text-text-primary mb-1.5"
-          >
-            {label}
-          </label>
+      <input
+        type={type}
+        className={cn(
+          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          className
         )}
-        <input
-          type={type}
-          className={cn(
-            'input w-full px-3 py-2 border rounded-lg text-sm transition-colors',
-            'border-neutral-300 bg-white text-text-primary',
-            'placeholder:text-text-secondary',
-            'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
-            'disabled:bg-neutral-100 disabled:cursor-not-allowed',
-            error && 'border-error focus:ring-error',
-            className
-          )}
-          ref={ref}
-          id={inputId}
-          {...props}
-        />
-        {error && (
-          <p className="mt-1 text-sm text-error" role="alert">
-            {error}
-          </p>
-        )}
-        {helperText && !error && (
-          <p className="mt-1 text-sm text-text-secondary">
-            {helperText}
-          </p>
-        )}
-      </div>
-    );
+        ref={ref}
+        {...props}
+      />
+    )
   }
-);
+)
+Input.displayName = "Input"
 
-Input.displayName = 'Input';
-
-export { Input };
+export { Input }
