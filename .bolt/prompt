@@ -9,6 +9,9 @@ This file must include:
  - Today’s correct date and current time
 
 3) Double-check that the date and time recorded are accurate and up to date.
+curl -X 'GET' \
+  'https://www.timeapi.io/api/time/current/zone?timeZone=Europe%2FAmsterdam' \
+  -H 'accept: application/json'
 
 4)  **Coding Standards**
    - Follow TypeScript best practices
