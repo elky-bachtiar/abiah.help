@@ -65,7 +65,7 @@ export function MissionSection() {
               {
                 icon: Zap,
                 title: '24/7 Availability',
-                description: 'Critical decisions don't happen during business hours. Our AI mentors are available whenever founders need guidance.'
+                description: 'Critical decisions don\'t happen during business hours. Our AI mentors are available whenever founders need guidance.'
               },
               {
                 icon: Users,
