@@ -3,7 +3,7 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { cn } from '../../lib/utils'; 
-import welcomeMp4 from '../../assets/videos/welcome.mp4';
+import welcomeMp4 from '../../assets/videos/Abiah.mp4';
 import welcomeWebm from '../../assets/videos/welcome.webm';
 
 interface TavusVideoWelcomeProps {
@@ -83,8 +83,9 @@ export function TavusVideoWelcome({ onVideoReady, className }: TavusVideoWelcome
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       >
-        <source src={welcomeWebm} type="video/webm" /> 
+ 
         <source src={welcomeMp4} type="video/mp4" />
+        <source src={welcomeWebm} type="video/webm" />
         Your browser does not support the video tag.
       </video>
 

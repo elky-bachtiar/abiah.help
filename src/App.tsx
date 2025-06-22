@@ -14,6 +14,11 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Consultation } from './pages/Consultation';
 import { Documents } from './pages/Documents';
+import { TeamPage } from './pages/TeamPage';
+import { AboutPage } from './pages/AboutPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { Settings } from './pages/Settings';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -72,82 +77,102 @@ function AppContent() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-background-primary">
-        <Header />
+        <ThemeProvider>
+          <Header />
         
-        <main className="flex-1">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
-            <Route 
-              path="/login" 
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              } 
-            />
-            <Route 
-              path="/register" 
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              } 
-            />
+          <main className="flex-1">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/team" element={<TeamPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route 
+                path="/login" 
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/register" 
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                } 
+              />
 
-            {/* Protected Routes */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/consultation" 
-              element={
-                <ProtectedRoute>
-                  <Consultation />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/documents" 
-              element={
-                <ProtectedRoute>
-                  <Documents />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/documents/:id" 
-              element={
-                <ProtectedRoute>
-                  <Documents />
-                </ProtectedRoute>
-              } 
-            />
+              {/* Protected Routes */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/consultation" 
+                element={
+                  <ProtectedRoute>
+                    <Consultation />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/documents" 
+                element={
+                  <ProtectedRoute>
+                    <Documents />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/documents/:id" 
+                element={
+                  <ProtectedRoute>
+                    <Documents />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
 
-        <Footer />
+          <Footer />
         
-        {/* Toast Notifications */}
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#2A2F6D',
-              color: '#FFFFFF',
-              border: '1px solid #F9B94E',
-            },
-          }}
-        />
+          {/* Toast Notifications */}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#2A2F6D',
+                color: '#FFFFFF',
+                border: '1px solid #F9B94E',
+              },
+            }}
+          />
+        </ThemeProvider>
       </div>
     </Router>
   );
