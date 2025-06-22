@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, Settings, Video, Menu, X, ChevronRight, Users, Info } from 'lucide-react';
+import { User, LogOut, Settings, Video, Menu, X, ChevronRight, Users, Info, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom } from '../../store/auth';
 import { useAuth } from '../../hooks/useAuth';
@@ -98,6 +98,12 @@ export function Header({ className }: HeaderProps) {
                   className="text-text-secondary hover:text-primary transition-colors"
                 >
                   About
+                </Link>
+                <Link 
+                  to="/pricing" 
+                  className="text-text-secondary hover:text-primary transition-colors"
+                >
+                  Pricing
                 </Link>
               </div>
             )}
@@ -307,6 +313,16 @@ export function Header({ className }: HeaderProps) {
                           </div>
                           <ChevronRight className="w-5 h-5 text-text-secondary" />
                         </Link>
+                        <Link 
+                          to="/pricing" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <DollarSign className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base">Pricing</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
                         <button
                           onClick={handleSignOut}
                           className="flex items-center w-full py-3 px-4 rounded-lg hover:bg-neutral-50 text-error transition-colors"
@@ -336,6 +352,16 @@ export function Header({ className }: HeaderProps) {
                           <div className="flex items-center">
                             <Info className="w-5 h-5 mr-3 text-text-secondary" />
                             <span className="text-base font-medium">About</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                        <Link 
+                          to="/pricing" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <DollarSign className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base font-medium">Pricing</span>
                           </div>
                           <ChevronRight className="w-5 h-5 text-text-secondary" />
                         </Link>
