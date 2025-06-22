@@ -49,7 +49,7 @@ const mockTeamMembers: TeamMember[] = [
     id: '4',
     name: 'Sarah Johnson',
     role: 'Head of Mentorship Success',
-    bio: 'Sarah brings 10+ years of experience in startup coaching and accelerator program management. She ensures that Abiah's AI mentorship delivers exceptional value and builds meaningful relationships with founders.',
+    bio: 'Sarah brings 10+ years of experience in startup coaching and accelerator program management. She ensures that Abiah\'s AI mentorship delivers exceptional value and builds meaningful relationships with founders.',
     image_url: '',
     linkedin_url: 'https://linkedin.com/in/sarahjohnson',
     expertise_areas: ['Startup Coaching', 'Mentorship Programs', 'Founder Relations'],
