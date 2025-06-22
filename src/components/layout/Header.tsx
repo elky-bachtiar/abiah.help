@@ -1,7 +1,8 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, Settings, Video, Menu, X } from 'lucide-react';
+import { User, LogOut, Settings, Video, Menu, X, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom } from '../../store/auth';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../ui/Button';
@@ -148,7 +149,7 @@ export function Header({ className }: HeaderProps) {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button variant="primary" size="sm">
+                  <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90 text-white">
                     Get Started
                   </Button>
                 </Link>
@@ -157,70 +158,150 @@ export function Header({ className }: HeaderProps) {
             
             {/* Mobile Menu Button */}
             <button 
-              className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+              className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors relative z-50"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6 text-primary" />
-              ) : (
-                <Menu className="w-6 h-6 text-primary" />
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {mobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="w-6 h-6 text-primary" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="w-6 h-6 text-primary" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </div>
         
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 px-4 border-t border-neutral-200">
-            {isAuthenticated ? (
-              <div className="space-y-3">
-                <Link 
-                  to="/dashboard" 
-                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  to="/consultation" 
-                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors flex items-center gap-1"
-                >
-                  <Video className="w-4 h-4" />
-                  Consultation
-                </Link>
-                <Link 
-                  to="/documents" 
-                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors"
-                >
-                  Documents
-                </Link>
-                <hr className="border-neutral-200 my-2" />
-                <button
-                  onClick={handleSignOut}
-                  className="block w-full text-left py-2 px-3 rounded-lg hover:bg-neutral-100 text-error hover:text-error/80 transition-colors flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="md:hidden fixed inset-0 z-40 bg-white">
+              <div className="pt-20 px-6 pb-6 h-full overflow-y-auto">
+                <div className="space-y-6">
+                  {isAuthenticated ? (
+                    <>
+                      <div className="bg-background-secondary p-4 rounded-lg mb-6">
+                        <div className="flex items-center space-x-3 mb-2">
+                          {user?.avatar_url ? (
+                            <img
+                              src={user.avatar_url}
+                              alt={displayName}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center text-lg font-medium">
+                              {initials}
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="font-medium text-primary">{displayName}</h3>
+                            <p className="text-sm text-text-secondary">{user?.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <nav className="space-y-1">
+                        <Link 
+                          to="/dashboard" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <span className="text-base font-medium">Dashboard</span>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                        <Link 
+                          to="/consultation" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <Video className="w-5 h-5 mr-3 text-primary" />
+                            <span className="text-base font-medium">Consultation</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                        <Link 
+                          to="/documents" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <span className="text-base font-medium">Documents</span>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                      </nav>
+
+                      <hr className="border-neutral-200 my-4" />
+                      
+                      <div className="space-y-1">
+                        <Link 
+                          to="/profile"
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <User className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base">Profile</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                        <Link 
+                          to="/settings"
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <Settings className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base">Settings</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center w-full py-3 px-4 rounded-lg hover:bg-neutral-50 text-error transition-colors"
+                        >
+                          <LogOut className="w-5 h-5 mr-3" />
+                          <span className="text-base">Sign Out</span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4 pt-6">
+                      <Link 
+                        to="/login" 
+                        className="block py-3 px-4 rounded-lg border border-neutral-200 text-center text-text-primary hover:bg-neutral-50 transition-colors w-full"
+                      >
+                        Sign In
+                      </Link>
+                      <Link 
+                        to="/register" 
+                        className="block py-3 px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-center w-full"
+                      >
+                        Get Started
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                <Link 
-                  to="/login" 
-                  className="block py-2 px-3 rounded-lg hover:bg-neutral-100 text-text-secondary hover:text-primary transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link 
-                  to="/register" 
-                  className="block py-2 px-3 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-center"
-                >
-                  Get Started
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );
