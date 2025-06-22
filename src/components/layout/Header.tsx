@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, Settings, Video, Menu, X, ChevronRight } from 'lucide-react';
+import { User, LogOut, Settings, Video, Menu, X, ChevronRight, Users, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom } from '../../store/auth';
 import { useAuth } from '../../hooks/useAuth';
@@ -64,7 +64,7 @@ export function Header({ className }: HeaderProps) {
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {isAuthenticated ? (
-              <>
+              <div className="flex items-center space-x-6">
                 <Link 
                   to="/dashboard" 
                   className="text-text-secondary hover:text-primary transition-colors"
@@ -84,8 +84,23 @@ export function Header({ className }: HeaderProps) {
                 >
                   Documents
                 </Link>
-              </>
-            ) : null}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-6">
+                <Link 
+                  to="/team" 
+                  className="text-text-secondary hover:text-primary transition-colors"
+                >
+                  Team
+                </Link>
+                <Link 
+                  to="/about" 
+                  className="text-text-secondary hover:text-primary transition-colors"
+                >
+                  About
+                </Link>
+              </div>
+            )}
           </nav>
 
           {/* User Menu / Auth Buttons */}
@@ -272,6 +287,26 @@ export function Header({ className }: HeaderProps) {
                           </div>
                           <ChevronRight className="w-5 h-5 text-text-secondary" />
                         </Link>
+                        <Link 
+                          to="/team" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <Users className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base">Team</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                        <Link 
+                          to="/about" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <Info className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base">About</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
                         <button
                           onClick={handleSignOut}
                           className="flex items-center w-full py-3 px-4 rounded-lg hover:bg-neutral-50 text-error transition-colors"
@@ -282,20 +317,45 @@ export function Header({ className }: HeaderProps) {
                       </div>
                     </>
                   ) : (
-                    <div className="space-y-4 pt-6">
-                      <Link 
-                        to="/login" 
-                        className="block py-3 px-4 rounded-lg border border-neutral-200 text-center text-text-primary hover:bg-neutral-50 transition-colors w-full"
-                      >
-                        Sign In
-                      </Link>
-                      <Link 
-                        to="/register" 
-                        className="block py-3 px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-center w-full"
-                      >
-                        Get Started
-                      </Link>
-                    </div>
+                    <>
+                      <nav className="space-y-1">
+                        <Link 
+                          to="/team" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <Users className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base font-medium">Team</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                        <Link 
+                          to="/about" 
+                          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-neutral-50 text-text-primary hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <Info className="w-5 h-5 mr-3 text-text-secondary" />
+                            <span className="text-base font-medium">About</span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-text-secondary" />
+                        </Link>
+                      </nav>
+                      
+                      <div className="space-y-4 pt-6 mt-6 border-t border-neutral-200">
+                        <Link 
+                          to="/login" 
+                          className="block py-3 px-4 rounded-lg border border-neutral-200 text-center text-text-primary hover:bg-neutral-50 transition-colors w-full"
+                        >
+                          Sign In
+                        </Link>
+                        <Link 
+                          to="/register" 
+                          className="block py-3 px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-center w-full"
+                        >
+                          Get Started
+                        </Link>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
