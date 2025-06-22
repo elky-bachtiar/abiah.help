@@ -32,7 +32,7 @@ export function ValuesSection() {
     {
       icon: Users,
       title: 'Community',
-      description: 'We foster a supportive ecosystem where founders can learn from each other's journeys and celebrate collective success.'
+      description: 'We foster a supportive ecosystem where founders can learn from each other\'s journeys and celebrate collective success.'
     }
   ];
   
