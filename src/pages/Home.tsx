@@ -1,5 +1,7 @@
 import React from 'react';
 import { HeroSection } from '../components/hero/HeroSection';
+import { TeamSection } from '../components/team/TeamSection';
+import { PricingSection } from '../components/pricing/PricingSection';
  
 export function Home() {
   return (
@@ -17,6 +19,12 @@ export function Home() {
           </p>
         </div>
       </section>
+      
+      {/* Team Section */}
+      <TeamSection />
+      
+      {/* Pricing Section */}
+      <PricingSection />
     </div>
   );
 }
