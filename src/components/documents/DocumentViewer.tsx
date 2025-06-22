@@ -1,18 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Download, 
   Share2,
-  ExternalLink,
   BookOpen, 
   CheckCircle2, 
   Circle,
   ChevronRight,
   ChevronDown,
-  Eye,
-  Clock
+  Eye
 } from 'lucide-react';
-import { Document, DocumentSection, DocumentProgress } from '../../types/Documents';
+import { Document, DocumentProgress } from '../../types/Documents';
 import { Button } from '../ui/Button';
 import { ProgressBar } from './ProgressBar';
 import { ExportOptions } from './ExportOptions';
@@ -201,25 +199,21 @@ export function DocumentViewer({ document, onProgressUpdate, className }: Docume
         <div className="lg:col-span-3">
           <div className="bg-white rounded-lg border border-neutral-200">
             {document.content.sections.map((section, index) => (
-              <motion.div
-                key={section.id}
-                id={section.id}
-                ref={(el) => {
-                  if (el) sectionRefs.current[section.id] = el;
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                onClick={() => window.open('https://investor-deck.abiah.help/', '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Investor Deck
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-b border-neutral-200 last:border-b-0"
-              >
+              <div key={section.id} className="border-b border-neutral-200 last:border-b-0">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="w-full px-6 pt-6"
+                >
+                  {/* Investor Deck link removed as per request */}
+                </motion.div>
+                <div 
+                  id={section.id}
+                  ref={(el) => {
+                    if (el) sectionRefs.current[section.id] = el;
+                  }}
+                >
                 <div className="p-6">
                   {/* Section Header */}
                   <div className="flex items-center justify-between mb-4">
@@ -296,19 +290,20 @@ export function DocumentViewer({ document, onProgressUpdate, className }: Docume
                     </motion.div>
                   )}
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* Export Options Modal */}
-      {showExportOptions && (
-        <ExportOptions
-          document={document}
-          onClose={() => setShowExportOptions(false)}
-        />
-      )}
     </div>
+
+    {/* Export Options Modal */}
+    {showExportOptions && (
+      <ExportOptions
+        document={document}
+        onClose={() => setShowExportOptions(false)}
+      />
+    )}
+  </div>
   );
 }
