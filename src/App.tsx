@@ -14,6 +14,7 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Consultation } from './pages/Consultation';
 import { Documents } from './pages/Documents';
+import { PricingPage } from './pages/PricingPage';
 import { TeamPage } from './pages/TeamPage';
 import { AboutPage } from './pages/AboutPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -86,6 +87,7 @@ function AppContent() {
               <Route path="/" element={<Home />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
               <Route 
                 path="/login" 
                 element={
