@@ -19,6 +19,7 @@ import { TeamPage } from './pages/TeamPage';
 import { AboutPage } from './pages/AboutPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { Settings } from './pages/Settings';
+import { CheckoutSuccess } from './pages/CheckoutSuccess';
 import { ThemeProvider } from './context/ThemeContext';
 
 // Create a client
@@ -88,6 +89,7 @@ function AppContent() {
               <Route path="/team" element={<TeamPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/checkout/success" element={<CheckoutSuccess />} />
               <Route 
                 path="/login" 
                 element={

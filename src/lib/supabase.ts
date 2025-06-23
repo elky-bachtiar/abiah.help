@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { Database } from '../types/supabase';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -9,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -108,7 +109,8 @@ export async function getTavusVideo(videoId: string): Promise<any | null> {
 
 export async function callEdgeFunction<T = any>(
   functionName: string,
-  payload?: unknown
+  payload?: unknown,
+  headers?: Record<string, string>
 ): Promise<T | null> {
   try {
     console.log(`[DEBUG] callEdgeFunction - About to call ${functionName} with payload:`, payload);
@@ -137,6 +139,13 @@ export async function callEdgeFunction<T = any>(
       // Always provide Authorization header with anon key as Bearer token
       'Authorization': `Bearer ${anonKey}`
     };
+    
+    // Add custom headers if provided
+    if (headers) {
+      Object.entries(headers).forEach(([key, value]) => {
+        headers[key] = value;
+      });
+    }
     
     // Add user auth token if available (will override the anon key in Authorization)
     if (authToken) {
