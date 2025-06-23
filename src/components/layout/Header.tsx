@@ -3,10 +3,12 @@ import { useAtom } from 'jotai';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, LogOut, Settings, Video, Menu, X, ChevronRight, Users, Info, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom } from '../../store/auth';
+import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom, authErrorAtom } from '../../store/auth';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
+import { getUserSubscription } from '../../api/stripe';
+import { useEffect, useState } from 'react';
 
 interface HeaderProps {
   className?: string;
@@ -19,9 +21,29 @@ export function Header({ className }: HeaderProps) {
   const [displayName] = useAtom(userDisplayNameAtom);
   const [initials] = useAtom(userInitialsAtom);
   const { signOut } = useAuth();
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = React.useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchSubscription = async () => {
+        try {
+          setSubscriptionLoading(true);
+          const data = await getUserSubscription();
+          setSubscription(data);
+        } catch (error) {
+          console.error('Error fetching subscription:', error);
+        } finally {
+          setSubscriptionLoading(false);
+        }
+      };
+
+      fetchSubscription();
+    }
+  }, [isAuthenticated]);
 
   // Add handleSignOut function
   const handleSignOut = async () => {
@@ -116,6 +138,13 @@ export function Header({ className }: HeaderProps) {
                 <span className="text-sm text-text-secondary hidden sm:block">
                   Welcome, {displayName}
                 </span>
+                {subscription?.subscription_status === 'active' && (
+                  <span className="ml-2 text-xs px-2 py-0.5 bg-success/10 text-success rounded-full">
+                    {subscription.price_id ? 
+                      products.find(p => p.priceId === subscription.price_id)?.name || 'Subscribed' 
+                      : 'Subscribed'}
+                  </span>
+                )}
                 
                 {/* User Avatar */}
                 <div className="relative group">

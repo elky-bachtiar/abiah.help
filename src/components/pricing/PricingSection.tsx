@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PricingCard } from './PricingCard';
 import { PricingToggle } from './PricingToggle';
+import { products } from '../../stripe-config';
 
 export function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -10,70 +11,54 @@ export function PricingSection() {
     setIsAnnual(!isAnnual);
   };
   
-  const handleSelectPlan = (planName: string) => {
-    console.log(`Selected plan: ${planName}, billing: ${isAnnual ? 'annual' : 'monthly'}`);
-    // Here you would typically redirect to a signup or checkout page
-    // window.location.href = `/signup?plan=${planName}&billing=${isAnnual ? 'annual' : 'monthly'}`;
+  // Map of product features based on product name
+  const productFeatures: Record<string, string[]> = {
+    'Founder Essential': [
+      '4 × 30-minute video mentorship sessions per month',
+      'Basic document generation',
+      'Email support',
+      'Funding readiness score',
+      'Document templates',
+      'Mobile access'
+    ],
+    'Growth Accelerator': [
+      '8 × 45-minute video mentorship sessions per month',
+      'Advanced analytics & integrations',
+      'Team collaboration features',
+      'Priority support',
+      'Custom document templates',
+      'API access'
+    ],
+    'Professional Advisory': [
+      'Unlimited mentorship access',
+      'Industry-specific compliance',
+      'Custom mentor avatars',
+      'Dedicated success manager',
+      'White-glove onboarding',
+      'Advanced integrations'
+    ]
   };
-  
-  const pricingPlans = [
-    {
-      title: 'Founder Essential',
-      price: 199,
-      annualPrice: 1908, // $159/mo when paid annually
-      features: [
-        '2 video consultations/month',
-        'Basic document generation',
-        'Email support',
-        'Funding readiness score',
-        'Document templates',
-        'Mobile access'
-      ],
-      isPopular: false
-    },
-    {
-      title: 'Growth Accelerator',
-      price: 599,
-      annualPrice: 5748, // $479/mo when paid annually
-      features: [
-        '6 video consultations/month',
-        'Advanced analytics & integrations',
-        'Team collaboration features',
-        'Priority support',
-        'Custom document templates',
-        'API access'
-      ],
-      isPopular: true
-    },
-    {
-      title: 'Professional Advisory',
-      price: 1299,
-      annualPrice: 12468, // $1039/mo when paid annually
-      features: [
-        'Unlimited consultations',
-        'Industry-specific compliance',
-        'Custom mentor avatars',
-        'Dedicated success manager',
-        'White-glove onboarding',
-        'Advanced integrations'
-      ],
-      isPopular: false
-    },
-    {
-      title: 'Enterprise Command',
-      price: 3999,
-      annualPrice: 38388, // $3199/mo when paid annually
-      features: [
-        'White-label solutions',
-        'Custom integrations',
-        'Dedicated success manager',
-        'Enterprise SLA',
-        'Custom AI training',
-        'Multi-team management'
-      ],
-      isPopular: false
-    }
-  ];
+
+  // Map of product prices
+  const productPrices: Record<string, number> = {
+    'Founder Essential': 199,
+    'Growth Accelerator': 599,
+    'Professional Advisory': 1299
+  };
+
+  // Map of annual prices (20% discount)
+  const annualPrices: Record<string, number> = {
+    'Founder Essential': 1908, // $159/mo when paid annually
+    'Growth Accelerator': 5748, // $479/mo when paid annually
+    'Professional Advisory': 12468 // $1039/mo when paid annually
+  };
+
+  // Map of popular status
+  const isPopular: Record<string, boolean> = {
+    'Founder Essential': false,
+    'Growth Accelerator': true,
+    'Professional Advisory': false
+  };
   
   return (
     <section className="py-20 bg-background-secondary">
@@ -96,16 +81,17 @@ export function PricingSection() {
         <PricingToggle isAnnual={isAnnual} onToggle={toggleBillingPeriod} />
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {pricingPlans.map((plan, index) => (
+          {products.map((product) => (
             <PricingCard
-              key={index}
-              title={plan.title}
-              price={plan.price}
-              annualPrice={plan.annualPrice}
-              features={plan.features}
-              isPopular={plan.isPopular}
+              key={product.id}
+              title={product.name}
+              price={productPrices[product.name] || 0}
+              annualPrice={annualPrices[product.name] || 0}
+              features={productFeatures[product.name] || []}
+              isPopular={isPopular[product.name] || false}
               isAnnual={isAnnual}
-              onSelectPlan={() => handleSelectPlan(plan.title)}
+              priceId={product.priceId}
+              mode={product.mode}
             />
           ))}
         </div>
