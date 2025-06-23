@@ -19,9 +19,7 @@ export function Home() {
           </p>
         </div>
       </section>
-      
-      {/* Team Section */}
-      <TeamSection />
+    
       
       {/* Pricing Section */}
       <PricingSection />
