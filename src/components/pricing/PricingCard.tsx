@@ -1,7 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
-import { Button } from '../ui/Button-bkp';
+import { Check, Loader2 } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { createCheckoutSession } from '../../api/stripe';
+import { useAtom } from 'jotai';
+import { isAuthenticatedAtom } from '../../store/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface PricingCardProps {
   title: string;
@@ -10,7 +14,8 @@ interface PricingCardProps {
   features: string[];
   isPopular?: boolean;
   isAnnual: boolean;
-  onSelectPlan: () => void;
+  priceId: string;
+  mode: 'subscription' | 'payment';
 }
 
 export function PricingCard({ 
@@ -20,13 +25,36 @@ export function PricingCard({
   features, 
   isPopular = false,
   isAnnual,
-  onSelectPlan
+  priceId,
+  mode
 }: PricingCardProps) {
+  const [isAuthenticated] = useAtom(isAuthenticatedAtom);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const navigate = useNavigate();
+
   // Calculate annual price if not provided
   const calculatedAnnualPrice = annualPrice || price * 12 * 0.8; // 20% discount
   const displayPrice = isAnnual ? calculatedAnnualPrice / 12 : price;
   const annualSavings = price * 12 - calculatedAnnualPrice;
   
+  const handleSelectPlan = async () => {
+    if (!isAuthenticated) {
+      navigate('/login?redirect=pricing');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { url } = await createCheckoutSession(priceId, mode);
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('Failed to create checkout session. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -75,10 +103,18 @@ export function PricingCard({
       <div className="p-6 pt-0 mt-auto">
         <Button
           variant={isPopular ? 'secondary' : 'outline'}
-          className="w-full justify-center"
-          onClick={onSelectPlan}
+          className="w-full justify-center" 
+          onClick={handleSelectPlan}
+          disabled={isLoading}
         >
-          {isPopular ? 'Get Started' : 'Select Plan'}
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            isPopular ? 'Get Started' : 'Select Plan'
+          )}
         </Button>
       </div>
     </motion.div>
