@@ -28,7 +28,7 @@
 -- Create conversations table
 CREATE TABLE IF NOT EXISTS conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   tavus_conversation_id TEXT,
   title TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
