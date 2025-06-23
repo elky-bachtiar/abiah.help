@@ -109,6 +109,19 @@ export function ConversationHistory({
               <span>{conversation.duration_minutes} min</span>
             </div>
             
+            {/* Context Summary (if available) */}
+            {conversation.context_data && Object.keys(conversation.context_data).length > 0 && (
+              <div className="mb-3 text-sm text-text-secondary">
+                <div className="line-clamp-2 italic">
+                  {conversation.context_data.focus_area ? 
+                    `Focus: ${conversation.context_data.focus_area}` : 
+                    conversation.context_data.startup_context?.company_name ? 
+                      `Company: ${conversation.context_data.startup_context.company_name}` : 
+                      'AI mentorship conversation'}
+                </div>
+              </div>
+            )}
+            
             <div className="mb-3">
               <div className="flex flex-wrap gap-2">
                 {conversation.key_topics.map((topic, index) => (
@@ -130,6 +143,18 @@ export function ConversationHistory({
                 {conversation.mentor_persona} mentor
               </div>
             </div>
+            
+            {/* Message History Preview (if available) */}
+            {conversation.message_history && conversation.message_history.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-neutral-200">
+                <div className="text-xs text-text-secondary mb-1">
+                  {conversation.message_history.length} messages exchanged
+                </div>
+                <div className="text-sm text-text-primary line-clamp-1">
+                  {conversation.message_history[conversation.message_history.length - 1].content}
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       </motion.div>

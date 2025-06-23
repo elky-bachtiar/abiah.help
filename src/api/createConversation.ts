@@ -2,8 +2,12 @@ import { IConversation } from "@/types";
 import { settingsAtom } from "@/store/settings";
 import { getDefaultStore } from "jotai";
 import { callTavusAPI } from "./tavus";
+import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 
-export const createConversation = async (): Promise<IConversation> => {
+export const createConversation = async (
+  userId?: string,
+  title?: string
+): Promise<IConversation> => {
   // Get settings from Jotai store
   const settings = getDefaultStore().get(settingsAtom);
   const default_context = `Abiah is a world-class AI startup mentor and virtual persona trained on thousands of successful venture deals, startup journeys, and pitch outcomes. Designed to serve as a digital mentor for early-stage founders, Abiah embodies the combined wisdom of legendary venture capitalists, elite accelerator coaches, and founder-turned-investors. His mission is singular and focused: to guide founders with strategic clarity, emotional strength, and investor-ready precision until they secure the funding they need.
@@ -57,16 +61,55 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     }
   };
 
+  // Create a local conversation record first
+  let localConversation;
+  if (userId) {
+    try {
+      const conversationTitle = title || `Conversation on ${new Date().toLocaleDateString()}`;
+      localConversation = await createConversationRecord(
+        userId,
+        conversationTitle,
+        settings.persona || "general",
+        {
+          focus_area: settings.context || undefined,
+          user_preferences: {
+            communication_style: "direct",
+            detail_level: "high"
+          }
+        }
+      );
+      console.log('Created local conversation record:', localConversation);
+    } catch (error) {
+      console.error('Error creating local conversation record:', error);
+      // Continue even if local record creation fails
+    }
+  }
   
   console.log('Sending payload to API:', payload);
   
   try {
     // Call Tavus API through Supabase Edge Function
-    return await callTavusAPI<IConversation>({
+    const tavusConversation = await callTavusAPI<IConversation>({
       method: 'POST',
       endpoint: '/v2/conversations',
       data: payload
     });
+    
+    // Update local conversation record with Tavus conversation ID
+    if (localConversation && tavusConversation.conversation_id) {
+      try {
+        await updateConversationWithTavusId(
+          localConversation.id,
+          tavusConversation.conversation_id
+        );
+        console.log('Updated local conversation with Tavus ID:', tavusConversation.conversation_id);
+      } catch (error) {
+        console.error('Error updating local conversation with Tavus ID:', error);
+        // Continue even if update fails
+      }
+    }
+    
+    return tavusConversation;
   } catch (error) {
     console.error('Error creating conversation:', error);
     throw new Error(`Failed to create conversation: ${error instanceof Error ? error.message : 'Unknown error'}`);
