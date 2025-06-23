@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { MessageSquare, Calendar, Lightbulb, Target } from 'lucide-react';
+import { MessageSquare, Calendar, Lightbulb, Target, ArrowLeft, Download, Share2 } from 'lucide-react';
 import { 
   conversationHistoryAtom, 
   conversationContextAPI,
@@ -21,10 +21,12 @@ import { InsightsDashboard } from '../components/insights/InsightsDashboard';
 import { ConversationTimeline } from '../components/conversation/ConversationTimeline';
 import { Button } from '../components/ui/Button-bkp';
 import { Card } from '../components/ui/Card';
+import { getConversationsForUser, getConversationDetails } from '../api/conversationApi';
+import { userAtom } from '../store/auth';
 
 export function ConversationHistoryPage() {
   // Global state
-  const [conversations] = useAtom(conversationHistoryAtom);
+  const [conversations, setConversations] = useAtom(conversationHistoryAtom);
   const [selectedConversationId, setSelectedConversationId] = useAtom(selectedConversationIdAtom);
   const [conversationDetail, setConversationDetail] = useAtom(conversationDetailAtom);
   const [goals] = useAtom(goalsAtom);
@@ -32,14 +34,43 @@ export function ConversationHistoryPage() {
   const [insights] = useAtom(conversationInsightsAtom);
   const [recommendations] = useAtom(recommendationsAtom);
   const [timelineItems] = useAtom(timelineItemsAtom);
+  const [user] = useAtom(userAtom);
   
   // Local state
   const [activeTab, setActiveTab] = useState<'history' | 'insights' | 'progress' | 'timeline'>('history');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Mock user ID
-  const userId = 'user-1';
+  // Use real user ID if available, otherwise fallback to mock
+  const userId = user?.id || 'user-1';
+  
+  // Load conversations when component mounts
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (!userId) return;
+      
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Use the real API if user is logged in
+        if (user) {
+          const userConversations = await getConversationsForUser(userId);
+          setConversations(userConversations);
+        } else {
+          // Otherwise use mock data (already loaded in the atom)
+          console.log('Using mock conversation data');
+        }
+      } catch (err) {
+        console.error('Error loading conversations:', err);
+        setError('Failed to load conversations. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadConversations();
+  }, [userId, user, setConversations]);
   
   // Load conversation detail when selected
   useEffect(() => {
@@ -52,8 +83,45 @@ export function ConversationHistoryPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const detail = await conversationContextAPI.getConversationDetail(selectedConversationId);
-        setConversationDetail(detail);
+        
+        // Use the real API if user is logged in
+        if (user) {
+          const detail = await getConversationDetails(selectedConversationId);
+          
+          // Convert to ConversationDetail format expected by the UI
+          // This is a temporary solution until we fully migrate the UI
+          const enhancedDetail = {
+            ...detail,
+            transcript: detail.message_history ? {
+              segments: detail.message_history.map((msg, index) => ({
+                id: msg.id || `msg-${index}`,
+                speaker: msg.role === 'assistant' ? 'ai' : msg.role,
+                text: msg.content,
+                timestamp: new Date(msg.timestamp).getTime() - new Date(detail.created_at).getTime()
+              })),
+              summary: 'Conversation transcript',
+              key_points: detail.key_topics || []
+            } : undefined,
+            insights: [],
+            context_data: {
+              context_summary: detail.context_data?.focus_area || 'AI mentorship conversation',
+              previous_conversations: detail.context_data?.previous_conversations || [],
+              related_topics: detail.key_topics || [],
+              user_preferences: detail.context_data?.user_preferences || {},
+              relationship_strength: 0.5,
+              context_awareness_level: 'intermediate',
+              last_updated: detail.updated_at
+            },
+            related_documents: [],
+            follow_ups: []
+          };
+          
+          setConversationDetail(enhancedDetail);
+        } else {
+          // Otherwise use mock data
+          const detail = await conversationContextAPI.getConversationDetail(selectedConversationId);
+          setConversationDetail(detail);
+        }
       } catch (err) {
         console.error('Error loading conversation detail:', err);
         setError('Failed to load conversation details');
@@ -92,15 +160,20 @@ export function ConversationHistoryPage() {
   const renderConversationDetail = () => {
     if (!conversationDetail) return null;
     
+    // Determine if we have a transcript from message history
+    const hasTranscript = conversationDetail.transcript?.segments && 
+                         conversationDetail.transcript.segments.length > 0;
+    
     return (
       <div>
         <div className="mb-6">
           <Button
             variant="ghost"
             onClick={handleBackClick}
-            className="mb-4"
+            className="mb-4 flex items-center"
           >
-            ← Back to Conversations
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Conversations
           </Button>
           
           <h2 className="text-2xl font-bold text-primary mb-2">{conversationDetail.title}</h2>
@@ -127,7 +200,25 @@ export function ConversationHistoryPage() {
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-primary mb-4">Conversation Transcript</h3>
                 
-                {conversationDetail.transcript?.segments.map((segment) => (
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Button>
+                  </div>
+                {hasTranscript ? conversationDetail.transcript?.segments.map((segment) => (
                   <div 
                     key={segment.id}
                     className={`mb-4 ${
@@ -148,7 +239,12 @@ export function ConversationHistoryPage() {
                       }
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="w-12 h-12 text-text-secondary mx-auto mb-2" />
+                    <p className="text-text-secondary">No transcript available for this conversation</p>
+                  </div>
+                )}
               </div>
             </Card>
             

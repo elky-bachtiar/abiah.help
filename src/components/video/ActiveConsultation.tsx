@@ -1,8 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { useDaily, useLocalSessionId, useParticipantIds, useVideoTrack, useAudioTrack } from '@daily-co/daily-react';
-import { conversationScreenAtom, videoControlsAtom, sessionTimerAtom, consultationContextAtom } from '../../store/consultation';
+import { 
+  conversationScreenAtom, 
+  videoControlsAtom, 
+  sessionTimerAtom, 
+  consultationContextAtom,
+  activeConversationIdAtom
+} from '../../store/consultation';
 import { createConversation } from '../../api/createConversation';
+import { endConversation } from '../../api/endConversation';
+import { appendMessageToHistory } from '../../api/conversationApi';
+import { userAtom } from '../../store/auth';
 import { Button } from '../ui/Button-bkp';
 import { VideoControls } from './VideoControls';
 import { SessionTimer } from './SessionTimer';
@@ -26,7 +35,10 @@ export function ActiveConsultation() {
   const [, setCurrentScreen] = useAtom(conversationScreenAtom);
   const [videoControls, setVideoControls] = useAtom(videoControlsAtom);
   const [sessionTimer, setSessionTimer] = useAtom(sessionTimerAtom);
+  const [activeConversationId, setActiveConversationId] = useAtom(activeConversationIdAtom);
+  const [user] = useAtom(userAtom);
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
+  const [tavusConversationId, setTavusConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Daily hooks
@@ -54,9 +66,20 @@ export function ActiveConsultation() {
         setIsLoading(true);
         
         // Create Tavus conversation with context from settings screen
-        const conversation = await createConversation();
+        const conversation = await createConversation(
+          user?.id, // Pass user ID if available
+          `Consultation on ${new Date().toLocaleDateString()}` // Default title
+        );
         
         setConversationUrl(conversation.conversation_url);
+        setTavusConversationId(conversation.conversation_id);
+        
+        // If we have a user and no active conversation ID was set (new conversation),
+        // we'll use the one created in createConversation
+        if (user && !activeConversationId) {
+          // The local conversation ID is stored in the database and linked to the Tavus ID
+          // We don't need to do anything here as it's handled in createConversation
+        }
 
         // Join the Daily call
         await daily?.join({
@@ -80,6 +103,23 @@ export function ActiveConsultation() {
     initializeConsultation();
   }, [setCurrentScreen, setSessionTimer, consultationContext, daily]);
 
+  // Handle message recording
+  const recordMessage = useCallback(async (role: 'user' | 'assistant', content: string) => {
+    if (!user || !activeConversationId) return;
+    
+    try {
+      await appendMessageToHistory(activeConversationId, {
+        id: `msg-${Date.now()}`,
+        role,
+        content,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error recording message:', error);
+      // Continue even if recording fails
+    }
+  }, [user, activeConversationId]);
+
   // Video/mic controls
   const toggleCamera = useCallback(() => {
     daily?.setLocalVideo(!localVideo || localVideo.isOff);
@@ -92,9 +132,18 @@ export function ActiveConsultation() {
   }, [daily, localAudio, setVideoControls]);
 
   const handleEndConsultation = useCallback(() => {
+    // End the Tavus conversation
+    if (tavusConversationId) {
+      endConversation('', tavusConversationId, activeConversationId || undefined)
+        .catch(error => console.error('Error ending conversation:', error));
+    }
+    
+    // Leave the Daily call
     daily?.leave();
+    
+    // Navigate to summary screen
     setCurrentScreen('summary');
-  }, [daily, setCurrentScreen]);
+  }, [daily, setCurrentScreen, tavusConversationId, activeConversationId]);
 
   if (isLoading) {
     return (

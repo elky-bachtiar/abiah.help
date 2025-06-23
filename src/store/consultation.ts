@@ -7,6 +7,9 @@ export const isInSessionAtom = atom<boolean>(false);
 export const consultationLoadingAtom = atom<boolean>(false);
 export const consultationErrorAtom = atom<string | null>(null);
 
+// Active conversation ID for continuity
+export const activeConversationIdAtom = atom<string | null>(null);
+
 // Tavus conversation state
 export const tavusConversationAtom = atom<TavusConversation | null>(null);
 export const conversationScreenAtom = atom<ConsultationScreen['name']>('intro');

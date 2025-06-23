@@ -4,6 +4,7 @@ import { User } from './index';
 export interface ConversationSummary {
   id: string;
   user_id: string;
+  tavus_conversation_id?: string;
   title: string;
   created_at: string;
   updated_at: string;
@@ -15,6 +16,8 @@ export interface ConversationSummary {
   sentiment_score?: number;
   has_transcript: boolean;
   has_recording: boolean;
+  context_data?: ConversationContextData;
+  message_history?: MessageHistory[];
   metadata?: Record<string, any>;
 }
 
@@ -24,6 +27,44 @@ export interface ConversationDetail extends ConversationSummary {
   context_data: ConversationContext;
   related_documents: RelatedDocument[];
   follow_ups: FollowUpItem[];
+}
+
+// Message history for conversation
+export interface MessageHistory {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  metadata?: {
+    emotion?: string;
+    intent?: string;
+    topics?: string[];
+    sentiment?: number;
+  };
+}
+
+// Conversation context data
+export interface ConversationContextData {
+  focus_area?: string;
+  questions?: string[];
+  goals?: string[];
+  previous_conversations?: {
+    id: string;
+    title: string;
+    key_points: string[];
+  }[];
+  user_preferences?: {
+    communication_style?: string;
+    detail_level?: string;
+    industry_focus?: string;
+  };
+  startup_context?: {
+    company_name?: string;
+    industry?: string;
+    stage?: string;
+    team_size?: number;
+    funding_raised?: number;
+  };
 }
 
 export interface ConversationTranscript {
