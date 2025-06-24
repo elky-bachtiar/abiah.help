@@ -53,7 +53,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
       participant_absent_timeout: 120,
       enable_recording: true,
       enable_closed_captions: true,
-      apply_greenscreen: false
+      apply_greenscreen: false,
       language: settings.language || 'english',
       recording_s3_bucket_name: 'conversation-recordings',
       recording_s3_bucket_region: 'us-east-1',
