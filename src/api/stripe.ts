@@ -99,6 +99,6 @@ export async function getUserOrders() {
  */
 export function getProductByPriceId(priceId: string) {
   // This would typically be an API call, but for simplicity we're importing from the config
-  const { products } = require('../stripe-config');
+  const { products } = require('src/stripe-config');
   return products.find((product: any) => product.priceId === priceId) || null;
 }
