@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PresentationChart, FileText, BarChart3, ArrowRight, Loader2 } from 'lucide-react';
+import { Presentation as PresentationChart, FileText, BarChart3, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '../ui/Button-bkp';
 import { Input } from '../ui/Input-bkp';
 import { Card, CardContent } from '../ui/Card';

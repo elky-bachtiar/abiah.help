@@ -6,7 +6,7 @@ import { userAtom } from '../store/auth';
 import { Document, DocumentProgress, GeneratedDocument, DocumentGenerationRequest } from '../types/Documents';
 import { Button } from '../components/ui/Button-bkp';
 import { Input } from '../components/ui/Input-bkp'; 
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { ProgressBar } from '../components/documents/ProgressBar';
 import { DocumentViewer } from '../components/documents/DocumentViewer';
 import { GeneratedDocumentViewer } from '../components/documents/GeneratedDocumentViewer';

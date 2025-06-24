@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, CheckCircle, AlertCircle, FileText, PresentationChart, BarChart3, Calendar } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, FileText, Presentation as PresentationChart, BarChart3, Calendar } from 'lucide-react';
 import { DocumentGenerationRequest } from '../../types/Documents';
 import { Button } from '../ui/Button-bkp';
 import { Card, CardContent } from '../ui/Card';

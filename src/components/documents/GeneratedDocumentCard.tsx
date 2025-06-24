@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FileText, PresentationChart, BarChart3, TrendingUp, Calendar, Download, Share2, RefreshCw, Eye } from 'lucide-react';
+import { FileText, Presentation as PresentationChart, BarChart3, TrendingUp, Calendar, Download, Share2, RefreshCw, Eye } from 'lucide-react';
 import { GeneratedDocument } from '../../types/Documents';
 import { Button } from '../ui/Button-bkp';
 import { Card } from '../ui/Card';
