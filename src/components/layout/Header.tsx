@@ -2,6 +2,7 @@ import React from 'react';
 import { useAtom } from 'jotai';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, LogOut, Settings, Video, Menu, X, ChevronRight, Users, Info, DollarSign } from 'lucide-react';
+import { useStripe } from '../../context/StripeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom, authErrorAtom } from '../../store/auth';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,29 +22,10 @@ export function Header({ className }: HeaderProps) {
   const [displayName] = useAtom(userDisplayNameAtom);
   const [initials] = useAtom(userInitialsAtom);
   const { signOut } = useAuth();
-  const [subscription, setSubscription] = useState<any>(null);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const { subscription } = useStripe();
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = React.useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const fetchSubscription = async () => {
-        try {
-          setSubscriptionLoading(true);
-          const data = await getUserSubscription();
-          setSubscription(data);
-        } catch (error) {
-          console.error('Error fetching subscription:', error);
-        } finally {
-          setSubscriptionLoading(false);
-        }
-      };
-
-      fetchSubscription();
-    }
-  }, [isAuthenticated]);
 
   // Add handleSignOut function
   const handleSignOut = async () => {
