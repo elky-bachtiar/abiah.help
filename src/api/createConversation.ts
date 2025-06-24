@@ -1,7 +1,7 @@
 import { IConversation } from "@/types";
 import { settingsAtom } from "@/store/settings";
 import { getDefaultStore } from "jotai";
-import { callTavusAPI } from "./tavus";
+import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 
 export const createConversation = async (
@@ -30,7 +30,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   // Build the context string
   let contextString = "";
   if (settings.name) {
-    contextString = `You are talking with the user, ${settings.name}. Additional context: `;
+    contextString = `You are talking with the user, ${settings.name}. `;
   }
   contextString += settings.context || default_context;
   
@@ -39,25 +39,27 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     // Optional: settings.replica or leave undefined for new conversation
     ...(settings.replica ? { replica_id: settings.replica } : {}),
     persona_id: settings.persona || "pebc953c8b73",
-    // The following fields are not in Settings by default, but can be added to settings.payload if needed
-    // callback_url: settings.callback_url || undefined,
-    // conversation_name: settings.conversation_name || 'AI Consultation',
+    // Add webhook URL for conversation completion
+    callback_url: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tavus-webhook`,
+    conversation_name: title || `Conversation on ${new Date().toLocaleDateString()}`,
     conversational_context: contextString,
     custom_greeting: settings.greeting !== undefined && settings.greeting !== null 
       ? settings.greeting 
       : "Hey there! I'm your technical co-pilot! Let's get get started building with Tavus.",
     properties: {
       // These will be undefined unless injected via settings.payload
-      max_call_duration: 3600,
+      max_call_duration: 300,
       participant_left_timeout: 60,
-      participant_absent_timeout: 300,
+      participant_absent_timeout: 120,
       enable_recording: true,
       enable_closed_captions: true,
-      apply_greenscreen: true,
+      apply_greenscreen: false
       language: settings.language || 'english',
       recording_s3_bucket_name: 'conversation-recordings',
       recording_s3_bucket_region: 'us-east-1',
-      aws_assume_role_arn: ''
+      aws_assume_role_arn: '',
+      // Enable LLM tools if configured
+      enable_llm_tools: import.meta.env.VITE_ENABLE_LLM_TOOLS === 'true'
     }
   };
 
@@ -87,12 +89,19 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   
   console.log('Sending payload to API:', payload);
   
+  // Add tools configuration header if enabled
+  const customHeaders: Record<string, string> = {};
+  if (import.meta.env.VITE_ENABLE_LLM_TOOLS === 'true') {
+    customHeaders['x-tavus-enable-tools'] = 'true';
+  }
+  
   try {
     // Call Tavus API through Supabase Edge Function
     const tavusConversation = await callTavusAPI<IConversation>({
       method: 'POST',
       endpoint: '/v2/conversations',
-      data: payload
+      data: payload,
+      headers: customHeaders
     });
     
     // Update local conversation record with Tavus conversation ID

@@ -4,17 +4,23 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Video, History, ArrowRight, Plus } from 'lucide-react';
 import { userAtom } from '../store/auth';
-import { activeConversationIdAtom } from '../store/consultation';
+import { activeConversationIdAtom, conversationScreenAtom } from '../store/consultation';
 import { ConsultationContainer } from '../components/video/ConsultationContainer';
 import { Button } from '../components/ui/Button-bkp';
 import { Card } from '../components/ui/Card';
 import { getConversationsForUser } from '../api/conversationApi';
 import { ConversationSummary } from '../types/Conversation';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { useConversationCompletion } from '../hooks/useConversationCompletion';
+import { ConversationStatusBar } from '../components/conversation/ConversationStatusBar';
+import { ConversationTranscript } from '../components/conversation/ConversationTranscript';
+import { PostConversationActions } from '../components/conversation/PostConversationActions';
+import { useDocuments } from '../hooks/useDocuments';
  
 export function Consultation() {
   const [user] = useAtom(userAtom);
   const [activeConversationId, setActiveConversationId] = useAtom(activeConversationIdAtom);
+  const [, setCurrentScreen] = useAtom(conversationScreenAtom);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
@@ -22,6 +28,25 @@ export function Consultation() {
   const [error, setError] = React.useState<string | null>(null);
   const [recentConversations, setRecentConversations] = React.useState<ConversationSummary[]>([]);
   const [showSelection, setShowSelection] = React.useState(true);
+  const [showTranscript, setShowTranscript] = React.useState(false);
+  
+  // Get conversation completion status
+  const { 
+    isCompleted, 
+    transcript, 
+    completionTime,
+    documentOpportunities,
+    error: completionError 
+  } = useConversationCompletion(activeConversationId, user?.id);
+  
+  // Get document generation capabilities
+  const { 
+    requestGeneration,
+    generationStatus,
+    activeGenerations,
+    subscribeToGenerationUpdates,
+    subscribeToConversationEvents
+  } = useDocuments();
   
   // Check if we're continuing a specific conversation
   const continueId = searchParams.get('continue');
@@ -74,9 +99,72 @@ export function Consultation() {
     setShowSelection(false);
   };
   
+  // Handle document generation request
+  const handleGenerateDocument = async (documentType: string) => {
+    if (!activeConversationId) return;
+    
+    // Show document generation form
+    navigate(`/documents/generate?type=${documentType}&conversation=${activeConversationId}`);
+  };
+  
+  // Subscribe to real-time updates
+  React.useEffect(() => {
+    if (!activeConversationId || !user) return;
+    
+    // Subscribe to document generation updates
+    const unsubscribeDocuments = subscribeToGenerationUpdates(activeConversationId);
+    
+    // Subscribe to conversation events
+    const unsubscribeConversation = subscribeToConversationEvents(activeConversationId);
+    
+    return () => {
+      unsubscribeDocuments();
+      unsubscribeConversation();
+    };
+  }, [activeConversationId, user, subscribeToGenerationUpdates, subscribeToConversationEvents]);
+  
   // If we're showing the consultation container, render it
   if (!showSelection) {
-    return <ConsultationContainer />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary to-primary-800">
+        <div className="container mx-auto px-4 py-8">
+          {/* Conversation Status */}
+          <ConversationStatusBar 
+            isCompleted={isCompleted}
+            completionTime={completionTime}
+            hasTranscript={!!transcript}
+            onViewTranscript={() => setShowTranscript(true)}
+            error={completionError}
+          />
+          
+          {/* Show transcript if requested */}
+          {showTranscript && transcript ? (
+            <ConversationTranscript
+              messages={transcript}
+              title="Conversation Transcript"
+              date={completionTime || undefined}
+              onGenerateDocument={handleGenerateDocument}
+            />
+          ) : (
+            <ConsultationContainer />
+          )}
+          
+          {/* Post-conversation actions */}
+          {isCompleted && !showTranscript && (
+            <PostConversationActions
+              transcript={transcript}
+              documentOpportunities={documentOpportunities}
+              onGenerateDocument={handleGenerateDocument}
+              onScheduleFollowUp={() => {
+                // Reset conversation state and start a new one
+                setActiveConversationId(null);
+                setCurrentScreen('intro');
+              }}
+            />
+          )}
+        </div>
+      </div>
+    );
   }
   
   // Otherwise, show the selection screen

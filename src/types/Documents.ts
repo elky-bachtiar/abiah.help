@@ -2,7 +2,7 @@ export interface Document {
   id: string;
   user_id: string;
   title: string;
-  type: 'business_plan' | 'pitch_deck' | 'executive_summary' | 'market_analysis' | 'financial_projections';
+  type: 'business_plan' | 'pitch_deck' | 'executive_summary' | 'market_analysis' | 'financial_projections' | 'consultation_summary';
   content: DocumentContent;
   status: 'generating' | 'completed' | 'failed';
   progress_data?: DocumentProgress;
@@ -70,4 +70,145 @@ export interface DocumentShare {
   permissions: DocumentPermissions;
   expires_at?: string;
   created_at: string;
+}
+
+/**
+ * Generated document from LLM
+ */
+export interface GeneratedDocument {
+  id: string;
+  consultation_id: string;
+  conversation_transcript_id?: string;
+  document_type: 'pitch_deck' | 'business_plan' | 'market_analysis' | 'consultation_summary';
+  title: string;
+  content: any;
+  metadata: {
+    generation_parameters?: any;
+    generated_at: string;
+    model: string;
+    [key: string]: any;
+  };
+  generated_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Document generation request
+ */
+export interface DocumentGenerationRequest {
+  id: string;
+  consultation_id: string;
+  conversation_transcript_id?: string;
+  requested_document_type: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  parameters: any;
+  result_document_id?: string;
+  created_at: string;
+}
+
+/**
+ * Pitch deck document content
+ */
+export interface PitchDeckContent {
+  slides: PitchDeckSlide[];
+  metadata: {
+    company_name: string;
+    industry: string;
+    slide_count: number;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Pitch deck slide
+ */
+export interface PitchDeckSlide {
+  id: string;
+  title: string;
+  type: 'title' | 'problem' | 'solution' | 'market' | 'business_model' | 'traction' | 'team' | 'competition' | 'financials' | 'ask' | 'contact' | 'other';
+  content: string;
+  order?: number;
+}
+
+/**
+ * Business plan content
+ */
+export interface BusinessPlanContent {
+  sections: BusinessPlanSection[];
+  metadata: {
+    business_name: string;
+    plan_type: string;
+    section_count: number;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Business plan section
+ */
+export interface BusinessPlanSection {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+  subsections?: BusinessPlanSubsection[];
+}
+
+/**
+ * Business plan subsection
+ */
+export interface BusinessPlanSubsection {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+}
+
+/**
+ * Market analysis content
+ */
+export interface MarketAnalysisContent {
+  sections: MarketAnalysisSection[];
+  metadata: {
+    industry: string;
+    geographic_focus: string;
+    research_depth: string;
+    section_count: number;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Market analysis section
+ */
+export interface MarketAnalysisSection {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+  charts?: any[];
+}
+
+/**
+ * Consultation summary content
+ */
+export interface ConsultationSummaryContent {
+  sections: ConsultationSummarySection[];
+  metadata: {
+    session_type: string;
+    key_topics: string[];
+    section_count: number;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Consultation summary section
+ */
+export interface ConsultationSummarySection {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
 }
