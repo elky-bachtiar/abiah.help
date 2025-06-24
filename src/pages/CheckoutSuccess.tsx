@@ -5,7 +5,7 @@ import { CheckCircle, ArrowRight, Home, Video, FileText, Calendar } from 'lucide
 import { Button } from '../components/ui/Button-bkp';
 import { Card } from '../components/ui/Card';
 import { getUserSubscription } from '../api/stripe';
-import { products } from '../../stripe-config';
+import { products } from '../stripe-config';
 
 export function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
