@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PricingCard } from './PricingCard';
 import { PricingToggle } from './PricingToggle';
-import { products } from '../../stripe-config';
+import { products } from 'src/stripe-config';
 
 export function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(false);
