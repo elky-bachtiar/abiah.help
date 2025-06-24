@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, ArrowRight, Home } from 'lucide-react';
+import { CheckCircle, ArrowRight, Home, Video, FileText, Calendar } from 'lucide-react';
 import { Button } from '../components/ui/Button-bkp';
 import { Card } from '../components/ui/Card';
 import { getUserSubscription } from '../api/stripe';
@@ -95,10 +95,11 @@ export function CheckoutSuccess() {
                     <div className="flex justify-between mb-2">
                       <span className="text-text-secondary">Status:</span>
                       <span className={`font-medium ${
-                        subscription?.subscription_status === 'active' ? 'text-success' : 'text-warning'
+                        subscription?.subscription_status === 'active' ? 'text-success' : 
+                        subscription?.subscription_status === 'trialing' ? 'text-success' : 'text-warning'
                       }`}>
                         {subscription?.subscription_status === 'active' ? 'Active' : 
-                         subscription?.subscription_status === 'trialing' ? 'Trial' : 
+                         subscription?.subscription_status === 'trialing' ? 'Free Trial' : 
                          subscription?.subscription_status || 'Processing'}
                       </span>
                     </div>
@@ -113,9 +114,51 @@ export function CheckoutSuccess() {
                     )}
                   </div>
                   
-                  <div className="bg-success/10 border border-success/20 rounded-lg p-4 text-success">
-                    <p className="font-medium">Your subscription is now active!</p>
-                    <p className="text-sm mt-1">You now have access to all features of the {product?.name} plan.</p>
+                  <div className="bg-success/10 border border-success/20 rounded-lg p-4 text-success mb-6">
+                    <p className="font-medium">
+                      {subscription?.subscription_status === 'trialing' 
+                        ? 'Your free trial is now active!' 
+                        : 'Your subscription is now active!'}
+                    </p>
+                    <p className="text-sm mt-1">
+                      {subscription?.subscription_status === 'trialing'
+                        ? `You now have access to all features of the ${product?.name} plan for your trial period.`
+                        : `You now have access to all features of the ${product?.name} plan.`}
+                    </p>
+                  </div>
+                  
+                  {/* Next steps */}
+                  <h3 className="text-lg font-semibold text-primary mb-3">Next Steps</h3>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <Video className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-primary">Start your first consultation</h4>
+                        <p className="text-sm text-text-secondary">Connect with your AI mentor to discuss your startup goals.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <FileText className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-primary">Generate your first document</h4>
+                        <p className="text-sm text-text-secondary">Create a pitch deck, business plan, or market analysis.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <Calendar className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-primary">Schedule follow-up sessions</h4>
+                        <p className="text-sm text-text-secondary">Plan your mentorship journey for maximum impact.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -142,6 +185,21 @@ export function CheckoutSuccess() {
             )}
           </div>
         </Card>
+        
+        {/* Testimonial */}
+        {!isLoading && !error && subscription && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-6 text-center text-text-secondary text-sm"
+          >
+            <p className="italic">
+              "Abiah helped me refine my pitch and secure $1.2M in seed funding. The AI mentorship was invaluable!"
+            </p>
+            <p className="font-medium mt-1">— Sarah K., FinTech Founder</p>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

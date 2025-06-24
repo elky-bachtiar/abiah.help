@@ -4,9 +4,14 @@ import { supabase } from '../lib/supabase';
  * Create a Stripe checkout session
  * @param priceId The Stripe price ID
  * @param mode The checkout mode ('subscription' or 'payment')
+ * @param trialDays Optional number of trial days for subscriptions
  * @returns The checkout session ID and URL
  */
-export async function createCheckoutSession(priceId: string, mode: 'subscription' | 'payment') {
+export async function createCheckoutSession(
+  priceId: string, 
+  mode: 'subscription' | 'payment',
+  trialDays?: number
+) {
   try {
     const { data: authData } = await supabase.auth.getSession();
     if (!authData.session) {
@@ -22,6 +27,7 @@ export async function createCheckoutSession(priceId: string, mode: 'subscription
       body: JSON.stringify({
         price_id: priceId,
         mode,
+        trial_period_days: trialDays,
         success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${window.location.origin}/pricing`,
       }),

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { SubscriptionStatus } from '../components/subscription/SubscriptionStatus';
 import { OrderHistory } from '../components/subscription/OrderHistory';
 import { Button } from '../components/ui/Button-bkp';
+import { Card, CardContent } from '../components/ui/Card';
 
 export function SubscriptionPage() {
   return (
@@ -81,6 +82,21 @@ export function SubscriptionPage() {
                 Subscription Details
               </h2>
               <SubscriptionStatus />
+              
+              {/* Upgrade Options */}
+              <Card className="mt-6">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-primary mb-4">Upgrade Options</h3>
+                  <p className="text-text-secondary mb-4">
+                    Need more features or video sessions? Upgrade your plan anytime.
+                  </p>
+                  <Link to="/pricing">
+                    <Button variant="primary" size="sm">
+                      View Upgrade Options
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
             
             <div id="orders">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, Star } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { createCheckoutSession } from '../../api/stripe';
 import { useAtom } from 'jotai';
@@ -16,6 +16,9 @@ interface PricingCardProps {
   isAnnual: boolean;
   priceId: string;
   mode: 'subscription' | 'payment';
+  badge?: string;
+  subtitle?: string;
+  hasTrial?: boolean;
 }
 
 export function PricingCard({ 
@@ -26,7 +29,10 @@ export function PricingCard({
   isPopular = false,
   isAnnual,
   priceId,
-  mode
+  mode,
+  badge,
+  subtitle,
+  hasTrial = false
 }: PricingCardProps) {
   const [isAuthenticated] = useAtom(isAuthenticatedAtom);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -45,7 +51,8 @@ export function PricingCard({
 
     try {
       setIsLoading(true);
-      const { url } = await createCheckoutSession(priceId, mode);
+      // Add trial period for subscription mode
+      const { url } = await createCheckoutSession(priceId, mode, hasTrial ? 5 : undefined);
       window.location.href = url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
@@ -72,12 +79,22 @@ export function PricingCard({
         </div>
       )}
       
+      {badge && (
+        <div className="bg-primary/10 text-primary text-xs font-medium py-2 px-4 text-center">
+          {badge}
+        </div>
+      )}
+      
       <div className="p-6 pb-0">
         <h3 className="text-xl font-bold text-primary mb-2">{title}</h3>
         
+        {subtitle && (
+          <p className="text-sm text-text-secondary mb-3">{subtitle}</p>
+        )}
+        
         <div className="mb-4">
-          <div className="flex items-baseline">
-            <span className="text-4xl font-bold text-primary">${Math.round(displayPrice)}</span>
+                hasTrial ? `Start 5-Day Free Trial` : (isPopular ? 'Get Started' : 'Select Plan')
+            <span className="text-4xl font-bold text-primary">${displayPrice}</span>
             <span className="text-text-secondary ml-1">/month</span>
           </div>
           

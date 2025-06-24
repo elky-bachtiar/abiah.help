@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CreditCard, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Calendar, CreditCard, CheckCircle, AlertCircle, Clock, Video } from 'lucide-react';
 import { useStripe } from '../../context/StripeContext';
 import { Button } from '../ui/Button-bkp';
 import { Card, CardContent } from '../ui/Card';
@@ -97,8 +97,8 @@ export function SubscriptionStatus() {
               </h3>
               <div className="flex items-center mt-1">
                 <span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(subscription.subscription_status)}`}>
-                  {subscription.subscription_status === 'active' ? 'Active' : 
-                   subscription.subscription_status === 'trialing' ? 'Trial' : 
+                  {subscription.subscription_status === 'active' ? 'Active' :
+                   subscription.subscription_status === 'trialing' ? 'Free Trial' : 
                    subscription.subscription_status || 'Unknown'}
                 </span>
                 {subscription.cancel_at_period_end && (
@@ -109,13 +109,39 @@ export function SubscriptionStatus() {
               </div>
             </div>
             
-            {subscription.subscription_status === 'active' && (
+            {(subscription.subscription_status === 'active' || subscription.subscription_status === 'trialing') && (
               <div className="flex items-center text-success">
                 <CheckCircle className="w-5 h-5 mr-1" />
-                <span className="text-sm font-medium">Active</span>
+                <span className="text-sm font-medium">
+                  {subscription.subscription_status === 'trialing' ? 'Trial Active' : 'Active'}
+                </span>
               </div>
             )}
           </div>
+          
+          {/* Subscription Features */}
+          {product && (
+            <div className="mb-4 p-4 bg-background-secondary rounded-lg">
+              <h4 className="font-medium text-primary mb-2 flex items-center">
+                <Video className="w-4 h-4 mr-2" />
+                Plan Features
+              </h4>
+              <div className="text-sm text-text-secondary">
+                {product.name === 'Founder Essential' && (
+                  <p>2 × 20-minute video sessions (40 minutes total)</p>
+                )}
+                {product.name === 'Founder Companion' && (
+                  <p>3 × 25-minute video sessions (75 minutes total)</p>
+                )}
+                {product.name === 'Growth Partner' && (
+                  <p>5 × 30-minute video sessions (150 minutes total)</p>
+                )}
+                {product.name === 'Expert Advisor' && (
+                  <p>8 × 30-minute video sessions (240 minutes total)</p>
+                )}
+              </div>
+            </div>
+          )}
           
           <div className="space-y-3 mb-4">
             <div className="flex justify-between items-center text-sm">
@@ -148,7 +174,9 @@ export function SubscriptionStatus() {
               <span className="font-medium">
                 {subscription.cancel_at_period_end 
                   ? 'Cancels on ' + formatDate(subscription.current_period_end)
-                  : formatDate(subscription.current_period_end)}
+                  : subscription.subscription_status === 'trialing'
+                    ? 'Trial ends on ' + formatDate(subscription.current_period_end)
+                    : 'Renews on ' + formatDate(subscription.current_period_end)}
               </span>
             </div>
           </div>

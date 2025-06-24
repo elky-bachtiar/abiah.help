@@ -8,7 +8,7 @@ interface PricingToggleProps {
 
 export function PricingToggle({ isAnnual, onToggle }: PricingToggleProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 mb-12">
+    <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
       <span className={`text-sm font-medium ${!isAnnual ? 'text-primary' : 'text-text-secondary'}`}>
         Monthly Billing
       </span>
@@ -33,10 +33,15 @@ export function PricingToggle({ isAnnual, onToggle }: PricingToggleProps) {
       
       <span className={`text-sm font-medium ${isAnnual ? 'text-primary' : 'text-text-secondary'}`}>
         Annual Billing
-        <span className="ml-1.5 inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-          Save 20%
+        <span className="ml-1.5 inline-flex items-center rounded-full bg-success/10 px-2 py-1 text-xs font-medium text-success">
+          Save 20% 🎉
         </span>
       </span>
+      
+      {/* Added explanation text */}
+      <div className="w-full text-center mt-2 text-xs text-text-secondary">
+        All plans include a 5-day free trial. No credit card required to start.
+      </div>
     </div>
   );
 }

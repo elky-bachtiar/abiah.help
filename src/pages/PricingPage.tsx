@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PricingSection } from '../components/pricing/PricingSection';
+import { CheckCircle } from 'lucide-react';
 
 export function PricingPage() {
   return (
@@ -14,17 +15,38 @@ export function PricingPage() {
             className="text-center"
           >
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Simple, Transparent Pricing
+              AI Mentorship Pricing
             </h1>
             <p className="text-xl text-white/80 max-w-3xl mx-auto">
-              Choose the plan that's right for your startup's stage and needs.
-              All plans include our core AI mentorship features.
+              Choose the plan that's right for your startup journey.
+              All plans include a 5-day free trial with no credit card required.
             </p>
           </motion.div>
         </div>
       </div>
       
       <PricingSection />
+      
+      {/* Guarantee Section */}
+      <div className="py-12 bg-background-primary">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="bg-primary/5 rounded-xl p-8 border border-primary/20 text-center"
+          >
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-primary mb-3">30-Day Money-Back Guarantee</h2>
+            <p className="text-text-secondary max-w-2xl mx-auto">
+              If you're not completely satisfied with your Abiah.help experience within the first 30 days,
+              we'll refund your subscription. No questions asked.
+            </p>
+          </motion.div>
+        </div>
+      </div>
       
       {/* FAQ Section */}
       <div className="py-20 bg-background-primary">
@@ -43,16 +65,16 @@ export function PricingPage() {
           <div className="space-y-6">
             {[
               {
-                question: 'What happens when I run out of video consultations?',
-                answer: 'You can purchase additional consultation credits at any time, or upgrade to a higher tier plan for more included consultations. Unused consultations roll over for up to 3 months.'
+                question: 'How does the 5-day free trial work?',
+                answer: 'You can try any plan free for 5 days with no credit card required. You\'ll get full access to all features included in your selected plan. At the end of the trial, you can choose to continue with a paid subscription or cancel anytime.'
               },
               {
                 question: 'Can I change plans at any time?',
                 answer: 'Yes, you can upgrade your plan at any time and the new features will be immediately available. When downgrading, changes will take effect at the start of your next billing cycle.'
               },
               {
-                question: 'Is there a free trial available?',
-                answer: 'Yes, we offer a 14-day free trial of the Growth Accelerator plan for new users. No credit card required to start your trial.'
+                question: 'What happens when I run out of video consultations?',
+                answer: 'You can purchase additional consultation credits at any time, or upgrade to a higher tier plan for more included consultations. Unused consultations roll over for up to 3 months.'
               },
               {
                 question: 'What payment methods do you accept?',
@@ -60,7 +82,11 @@ export function PricingPage() {
               },
               {
                 question: 'Do you offer discounts for startups or non-profits?',
-                answer: 'Yes, we offer special pricing for early-stage startups, non-profits, and educational institutions. Contact our sales team for more information.'
+                answer: 'Yes, we offer special pricing for early-stage startups, non-profits, and educational institutions. We also offer a 20% discount for annual subscriptions. Contact our sales team for more information.'
+              },
+              {
+                question: 'What does BYOK mean in the document generation feature?',
+                answer: 'BYOK stands for "Bring Your Own Key" and refers to using your own OpenAI or Anthropic API key for document generation. This allows you to use your own API credits while still benefiting from our specialized document templates and AI guidance.'
               }
             ].map((faq, index) => (
               <motion.div
