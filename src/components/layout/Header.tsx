@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, Settings, Video, Menu, X, ChevronRight, Users, Info, DollarSign } from 'lucide-react';
+import { User, LogOut, Settings, Video, Menu, X, ChevronRight, Users, Info, DollarSign, CreditCard } from 'lucide-react';
 import { useStripe } from '../../context/StripeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { userAtom, isAuthenticatedAtom, userDisplayNameAtom, userInitialsAtom, authErrorAtom } from '../../store/auth';

@@ -2,6 +2,7 @@ import React from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Video, FileText, BarChart3, Calendar, ArrowRight, Clock, CheckCircle } from 'lucide-react';
+import { SubscriptionCard } from '../components/dashboard/SubscriptionCard';
 import { userDisplayNameAtom } from '../store/auth'; 
 import { Button } from '../components/ui/Button-bkp';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
@@ -106,9 +107,12 @@ export function Dashboard() {
               </div>
             </CardContent>
           </Card>
+          
+          {/* Subscription Card */}
+          <SubscriptionCard />
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 mb-8">
           {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
