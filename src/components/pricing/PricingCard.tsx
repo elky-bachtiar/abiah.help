@@ -21,11 +21,11 @@ interface PricingCardProps {
   hasTrial?: boolean;
 }
 
-export function PricingCard({ 
-  title, 
-  price, 
-  annualPrice, 
-  features, 
+export function PricingCard({
+  title,
+  price,
+  annualPrice,
+  features,
   isPopular = false,
   isAnnual,
   priceId,
@@ -93,8 +93,8 @@ export function PricingCard({
         )}
         
         <div className="mb-4">
-                hasTrial ? `Start 5-Day Free Trial` : (isPopular ? 'Get Started' : 'Select Plan')
-            <span className="text-4xl font-bold text-primary">${displayPrice}</span>
+          <div className="flex items-baseline">
+            <span className="text-4xl font-bold text-primary">${Math.round(displayPrice)}</span>
             <span className="text-text-secondary ml-1">/month</span>
           </div>
           
@@ -105,6 +105,7 @@ export function PricingCard({
           )}
         </div>
       </div>
+      
       <div className="p-6 flex-grow">
         <ul className="space-y-3 mb-6">
           {features.map((feature, index) => (
@@ -115,7 +116,6 @@ export function PricingCard({
           ))}
         </ul>
       </div>
-        </motion.div>
       
       <div className="p-6 pt-0 mt-auto">
         <Button
@@ -130,7 +130,7 @@ export function PricingCard({
               Processing...
             </>
           ) : (
-            isPopular ? 'Get Started' : 'Select Plan'
+            hasTrial ? `Start 5-Day Free Trial` : (isPopular ? 'Get Started' : 'Select Plan')
           )}
         </Button>
       </div>
