@@ -48,7 +48,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
       : "Hey there! I'm your technical co-pilot! Let's get get started building with Tavus.",
     properties: {
       // These will be undefined unless injected via settings.payload
-      max_call_duration: 300,
+      max_call_duration: 180,
       participant_left_timeout: 60,
       participant_absent_timeout: 120,
       enable_recording: true,
