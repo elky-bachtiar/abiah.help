@@ -105,7 +105,6 @@ export function PricingCard({
           )}
         </div>
       </div>
-    </motion.div>
       <div className="p-6 flex-grow">
         <ul className="space-y-3 mb-6">
           {features.map((feature, index) => (
