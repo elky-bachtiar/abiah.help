@@ -1,28 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, FileText, BarChart3, Presentation as PresentationChart, TrendingUp, Calendar, MoreVertical, Eye, Download, Share2, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, FileText, BarChart3, Presentation as PresentationChart, TrendingUp, Calendar, MoreVertical, Eye, Download, Share2, Trash2, MessageSquare } from 'lucide-react';
 import { userAtom } from '../store/auth';
-import { Document, DocumentProgress } from '../types/Documents';
+import { Document, DocumentProgress, GeneratedDocument, DocumentGenerationRequest } from '../types/Documents';
 import { Button } from '../components/ui/Button-bkp';
 import { Input } from '../components/ui/Input-bkp'; 
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { ProgressBar } from '../components/documents/ProgressBar';
 import { DocumentViewer } from '../components/documents/DocumentViewer';
+import { GeneratedDocumentViewer } from '../components/documents/GeneratedDocumentViewer';
 import { DocumentGenerator } from '../components/documents/DocumentGenerator';
+import { DocumentGenerationForm } from '../components/documents/DocumentGenerationForm';
+import { DocumentGenerationStatus } from '../components/documents/DocumentGenerationStatus';
+import { GeneratedDocumentCard } from '../components/documents/GeneratedDocumentCard';
 import { formatDate } from '../lib/utils';
 import mockDocumentData from './mockDocument.json';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useDocuments } from '../hooks/useDocuments';
 
 // Use imported mock data
 const mockDocuments: Document[] = mockDocumentData.mockDocuments;
 
 export function Documents() {
   const [user] = useAtom(userAtom);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>(mockDocuments);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [selectedGeneratedDocument, setSelectedGeneratedDocument] = useState<GeneratedDocument | null>(null);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showGenerationForm, setShowGenerationForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState(''); 
   const [filterType, setFilterType] = useState<string>('all');
+  const [activeConsultationId, setActiveConsultationId] = useState<string | null>(null);
+  const [documentType, setDocumentType] = useState<string | null>(null);
+  
+  // Get document generation capabilities
+  const {
+    generatedDocuments,
+    fetchGeneratedDocuments,
+    requestGeneration,
+    generationStatus,
+    activeGenerations,
+    isLoading: isDocumentsLoading
+  } = useDocuments();
+  
+  // Check URL parameters for document generation
+  useEffect(() => {
+    const type = searchParams.get('type');
+    const conversation = searchParams.get('conversation');
+    
+    if (type && conversation) {
+      setDocumentType(type);
+      setActiveConsultationId(conversation);
+      setShowGenerationForm(true);
+    }
+  }, [searchParams]);
+  
+  // Fetch generated documents when consultation ID changes
+  useEffect(() => {
+    if (activeConsultationId) {
+      fetchGeneratedDocuments(activeConsultationId);
+    }
+  }, [activeConsultationId, fetchGeneratedDocuments]);
 
   // Filter documents based on search and type
   const filteredDocuments = documents.filter(doc => {
@@ -40,6 +81,30 @@ export function Documents() {
     ));
   };
 
+  // Handle document generation form submission
+  const handleGenerateDocument = async (documentType: string, parameters: any) => {
+    if (!activeConsultationId) return;
+    
+    try {
+      await requestGeneration(activeConsultationId, documentType, parameters);
+      setShowGenerationForm(false);
+    } catch (error) {
+      console.error('Error generating document:', error);
+    }
+  };
+  
+  // Handle viewing a generated document
+  const handleViewGeneratedDocument = (document: GeneratedDocument) => {
+    setSelectedGeneratedDocument(document);
+  };
+  
+  // Handle regenerating a document
+  const handleRegenerateDocument = (document: GeneratedDocument) => {
+    setActiveConsultationId(document.consultation_id);
+    setDocumentType(document.document_type);
+    setShowGenerationForm(true);
+  };
+  
   const getDocumentIcon = (type: string) => {
     switch (type) {
       case 'business_plan': return FileText;
@@ -61,6 +126,40 @@ export function Documents() {
     }
   };
 
+  if (selectedGeneratedDocument) {
+    return (
+      <div className="min-h-screen bg-background-secondary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedGeneratedDocument(null)}
+              className="mb-4"
+            >
+              ← Back to Documents
+            </Button>
+          </div>
+          
+          <GeneratedDocumentViewer
+            document={selectedGeneratedDocument}
+            onClose={() => setSelectedGeneratedDocument(null)}
+            onDownload={() => {
+              // Simulate download
+              alert('Download functionality would be implemented here');
+            }}
+            onShare={() => {
+              // Simulate share
+              alert('Share functionality would be implemented here');
+            }}
+            onPrint={() => {
+              window.print();
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (selectedDocument) {
     return (
       <div className="min-h-screen bg-background-secondary">
@@ -79,6 +178,61 @@ export function Documents() {
             document={selectedDocument}
             onProgressUpdate={(progress) => handleProgressUpdate(selectedDocument.id, progress)}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (showGenerationForm) {
+    return (
+      <div className="min-h-screen bg-background-secondary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowGenerationForm(false);
+                navigate('/documents');
+              }}
+              className="mb-4"
+            >
+              ← Back to Documents
+            </Button>
+          </div>
+          
+          <DocumentGenerationForm
+            consultationId={activeConsultationId!}
+            onSubmit={(documentType, parameters) => handleGenerateDocument(documentType, parameters)}
+            isGenerating={generationStatus === 'generating'}
+          />
+          
+          {/* Show active generation requests */}
+          {activeGenerations.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-primary mb-4">Generation Status</h3>
+              
+              <div className="space-y-4">
+                {activeGenerations.map((request) => (
+                  <DocumentGenerationStatus
+                    key={request.id}
+                    request={request}
+                    onViewDocument={(documentId) => {
+                      // Find the document and view it
+                      const document = generatedDocuments.find(doc => doc.id === documentId);
+                      if (document) {
+                        setSelectedGeneratedDocument(document);
+                      }
+                    }}
+                    onRetry={() => {
+                      // Set up for regeneration
+                      setDocumentType(request.requested_document_type);
+                      setShowGenerationForm(true);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -139,7 +293,7 @@ export function Documents() {
           </div>
 
           {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="flex-1">
               <div className="relative">
                 <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary" />
@@ -164,10 +318,51 @@ export function Documents() {
                 <option value="pitch_deck">Pitch Deck</option>
                 <option value="executive_summary">Executive Summary</option>
                 <option value="market_analysis">Market Analysis</option>
-                <option value="financial_projections">Financial Projections</option>
+                <option value="consultation_summary">Consultation Summary</option>
+                <option value="generated">AI Generated</option>
               </select>
             </div>
           </div>
+          
+          {/* Generated Documents Section */}
+          {generatedDocuments.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-primary mb-4 flex items-center">
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Generated from Conversations
+              </h2>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {generatedDocuments
+                  .filter(doc => filterType === 'all' || filterType === 'generated' || doc.document_type === filterType)
+                  .filter(doc => !searchQuery || doc.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .map((document, index) => (
+                    <GeneratedDocumentCard
+                      key={document.id}
+                      document={document}
+                      onView={handleViewGeneratedDocument}
+                      onRegenerate={handleRegenerateDocument}
+                      onDownload={() => {
+                        // Simulate download
+                        alert('Download functionality would be implemented here');
+                      }}
+                      onShare={() => {
+                        // Simulate share
+                        alert('Share functionality would be implemented here');
+                      }}
+                    />
+                  ))
+                }
+              </div>
+            </div>
+          )}
+
+          {/* Regular Documents Grid */}
+          <h2 className="text-xl font-semibold text-primary mb-4 flex items-center">
+            <FileText className="w-5 h-5 mr-2" />
+            Your Documents
+          </h2>
+          
         </motion.div>
 
         {/* Document Grid */}
@@ -279,7 +474,7 @@ export function Documents() {
         </div>
 
         {/* Empty State */}
-        {filteredDocuments.length === 0 && (
+        {filteredDocuments.length === 0 && generatedDocuments.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
