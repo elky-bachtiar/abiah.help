@@ -1,114 +1,93 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 
 interface StickyBoltLogoProps {
   className?: string;
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  size?: 'sm' | 'md' | 'lg';
-  theme?: 'light' | 'dark' | 'auto';
 }
 
 export function StickyBoltLogo({
   className,
   position = 'bottom-right',
-  size = 'md',
-  theme = 'auto'
 }: StickyBoltLogoProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [logoSize, setLogoSize] = useState<'sm' | 'md' | 'lg'>(size);
+  const [useWhiteLogo, setUseWhiteLogo] = useState(true); // Default: Hero = white
+  const heroRef = useRef<HTMLElement | null>(null);
+  const consultationRef = useRef<HTMLElement | null>(null);
+  const pricingRef = useRef<HTMLElement | null>(null);
 
-  // Detect preferred dark mode initially and on system change
   useEffect(() => {
-    if (theme === 'auto') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkMode(prefersDark);
+    heroRef.current = document.querySelector('section.hero-gradient');
+    consultationRef.current = document.getElementById('consultation-section');
+    pricingRef.current = document.querySelector('section.bg-background-secondary');
 
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleSections = entries.filter(entry => entry.isIntersecting).map(entry => entry.target.id || entry.target.className);
 
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } else {
-      setIsDarkMode(theme === 'dark');
-    }
-  }, [theme]);
-
-  // Scroll handler for visibility, size, and dynamic theme based on scroll depth
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      // Show/hide on scroll direction
-      if (currentScrollY > lastScrollY + 50) {
-        setIsVisible(false);
-        setLogoSize('sm');
-      } else if (currentScrollY < lastScrollY - 50) {
-        setIsVisible(true);
-        setLogoSize('md');
+        // If Hero is in view, use white logo
+        if (visibleSections.some(id => id.includes('hero-gradient'))) {
+          setUseWhiteLogo(true);
+        }
+        // If consultation or pricing is visible, use black logo
+        else if (
+          visibleSections.some(id =>
+            id.includes('consultation-section') ||
+            id.includes('bg-background-secondary')
+          )
+        ) {
+          setUseWhiteLogo(false);
+        }
+      },
+      {
+        threshold: 0.5,
       }
+    );
 
-      // Dynamically toggle theme if auto, based on scroll depth
-      if (theme === 'auto') {
-        setIsDarkMode(currentScrollY < 500); // Dark when near top
-      }
+    if (heroRef.current) observer.observe(heroRef.current);
+    if (consultationRef.current) observer.observe(consultationRef.current);
+    if (pricingRef.current) observer.observe(pricingRef.current);
 
-      setLastScrollY(currentScrollY);
+    return () => {
+      if (heroRef.current) observer.unobserve(heroRef.current);
+      if (consultationRef.current) observer.unobserve(consultationRef.current);
+      if (pricingRef.current) observer.unobserve(pricingRef.current);
     };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, theme]);
+  }, []);
 
   const positionClasses = {
     'bottom-right': 'bottom-4 right-4',
     'bottom-left': 'bottom-4 left-4',
     'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4'
+    'top-left': 'top-4 left-4',
   };
-
-  const sizeClasses = {
-    sm: 'w-10 h-10',
-    md: 'w-14 h-14',
-    lg: 'w-20 h-20'
-  };
-
-  const logoSrc = isDarkMode
-    ? '/images/bolt/bolt-white_circle_360x360.png'
-    : '/images/bolt/bolt-black_circle_360x360.png';
 
   return (
     <motion.div
       className={cn(
         'fixed z-50 transition-all duration-300',
         positionClasses[position],
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10',
         className
       )}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <motion.a
         href="https://bolt.new/?rid=dm8ttl."
         target="_blank"
         rel="noopener noreferrer"
-        className={cn(
-          'block rounded-full shadow-lg transition-transform duration-300',
-          sizeClasses[logoSize],
-          isHovered ? 'scale-110' : 'scale-100'
-        )}
-        whileHover={{ rotate: 10 }}
+        className="block w-20 h-20 rounded-full shadow-lg transition-transform"
+        whileHover={{ scale: 1.1, rotate: 5 }}
         whileTap={{ scale: 0.95 }}
         title="Built with Bolt"
       >
         <img
-          src={logoSrc}
+          src={
+            useWhiteLogo
+              ? '/images/bolt/bolt-white_circle_360x360.png'
+              : '/images/bolt/bolt-black_circle_360x360.png'
+          }
           alt="Built with Bolt"
           className="w-full h-full object-contain"
         />
