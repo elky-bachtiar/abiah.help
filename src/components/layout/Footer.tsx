@@ -94,23 +94,24 @@ export function Footer() {
         )}
 
         {/* Second part of the footer - always visible */}
-        {!isHome && (
-  <div className="flex justify-center">
-    <a 
-      href='https://bolt.new/?rid=dm8ttl.' 
-      target="_blank" 
-      rel="noopener noreferrer"
-      className="transition-transform hover:scale-105"
-    >
-      <img
-        src="/images/bolt/bolt-white_circle_360x360.png"
-        alt="Built with Bolt"
-        className="w-12 h-12 md:w-20 md:h-20"
-        style={{ objectFit: 'contain' }}
-      />
-    </a>
-  </div>
-)}
+        <div className={`flex flex-col items-center ${!isRestrictedPage ? 'border-t border-neutral-800 mt-8 pt-8' : ''}`}>
+          {!isHome && (
+            <div className="flex justify-center">
+              <a 
+                href='https://bolt.new/?rid=dm8ttl.' 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="transition-transform hover:scale-105"
+              >
+                <img
+                  src="/images/bolt/bolt-white_circle_360x360.png"
+                  alt="Built with Bolt"
+                  className="w-12 h-12 md:w-20 md:h-20"
+                  style={{ objectFit: 'contain' }}
+                />
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </footer>
