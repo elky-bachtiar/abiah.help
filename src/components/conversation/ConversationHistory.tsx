@@ -13,11 +13,14 @@ import {
   errorStateAtom,
   debounce
 } from '../../store/conversationHistory';
+import { getConversationsForUser } from '../../api/conversationApi';
 import { ConversationSummary, ConversationFilters } from '../../types/Conversation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button-bkp';
 import { Input } from '../../components/ui/Input-bkp';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ConversationHistoryProps {
   userId: string;
@@ -32,17 +35,94 @@ export function ConversationHistory({
   showFilters = true,
   compact = false
 }: ConversationHistoryProps) {
+  const { user } = useAuth();
+  
   // Global state
   const [conversations] = useAtom(paginatedConversationsAtom);
+  const [allConversations, setAllConversations] = useAtom(conversationHistoryAtom);
   const [filters, setFilters] = useAtom(conversationFiltersAtom);
   const [searchQuery, setSearchQuery] = useAtom(conversationSearchAtom);
   const [pagination, setPagination] = useAtom(paginationAtom);
   const [sort, setSort] = useAtom(conversationSortAtom);
-  const [isLoading] = useAtom(loadingStateAtom);
-  const [error] = useAtom(errorStateAtom);
+  const [isLoading, setIsLoading] = useAtom(loadingStateAtom);
+  const [error, setError] = useAtom(errorStateAtom);
   
   // Local state
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  
+  // Load conversations from API
+  const loadConversations = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      const fetchedConversations = await getConversationsForUser(user.id);
+      setAllConversations(fetchedConversations);
+      
+      // Update pagination info
+      setPagination(prev => ({
+        ...prev,
+        totalItems: fetchedConversations.length,
+        totalPages: Math.ceil(fetchedConversations.length / prev.pageSize)
+      }));
+    } catch (err) {
+      console.error('Error loading conversations:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load conversations');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, setAllConversations, setPagination, setIsLoading, setError]);
+  
+  // Load conversations on mount and user change
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+  
+  // Set up real-time subscriptions for conversation updates
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    console.log('Setting up real-time subscription for user:', user.id);
+    
+    // Subscribe to conversation updates
+    const conversationChannel = supabase
+      .channel(`user-${user.id}`)
+      .on('broadcast', { event: 'conversation_update' }, (payload) => {
+        console.log('Received conversation update:', payload);
+        
+        // Handle different types of updates
+        const { type, conversationId, status } = payload.payload;
+        
+        if (type === 'conversation_started' || type === 'conversation_ended' || type === 'conversation_completed') {
+          // Reload conversations to get updated data
+          loadConversations();
+        }
+      })
+      .subscribe();
+    
+    // Subscribe to conversation table changes
+    const tableChannel = supabase
+      .channel('conversations-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversations',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('Database conversation change:', payload);
+        
+        // Reload conversations to get latest data
+        loadConversations();
+      })
+      .subscribe();
+    
+    return () => {
+      console.log('Cleaning up real-time subscriptions');
+      conversationChannel.unsubscribe();
+      tableChannel.unsubscribe();
+    };
+  }, [user?.id, loadConversations]);
   
   // Handle search input with debounce
   const handleSearchChange = useCallback(
@@ -136,8 +216,25 @@ export function ConversationHistory({
             </div>
             
             <div className="flex justify-between items-center text-sm">
-              <div className="text-text-secondary">
-                <span className="font-medium">{conversation.insights_count}</span> insights generated
+              <div className="flex items-center gap-4">
+                <div className="text-text-secondary">
+                  <span className="font-medium">{conversation.insights_count}</span> insights generated
+                </div>
+                {/* Show quality indicators if available */}
+                {conversation.quality_score && (
+                  <div className="flex items-center text-xs">
+                    <div className={`w-2 h-2 rounded-full mr-1 ${
+                      conversation.quality_score > 80 ? 'bg-success' :
+                      conversation.quality_score > 60 ? 'bg-warning' :
+                      'bg-neutral-400'
+                    }`}></div>
+                    <span className="text-text-secondary">
+                      {conversation.quality_score > 80 ? 'High quality' :
+                       conversation.quality_score > 60 ? 'Good quality' :
+                       'Basic quality'}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="text-text-secondary">
                 {conversation.mentor_persona} mentor

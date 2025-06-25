@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MessageSquare, Calendar, Lightbulb, Target, ArrowLeft, Download, Share2 } from 'lucide-react';
 import { 
@@ -23,6 +24,7 @@ import { Button } from '../components/ui/Button-bkp';
 import { Card } from '../components/ui/Card';
 import { getConversationsForUser, getConversationDetails } from '../api/conversationApi';
 import { userAtom } from '../store/auth';
+import { useSubscriptionCheck } from '../hooks/useSubscriptionCheck';
 
 export function ConversationHistoryPage() {
   // Global state
@@ -35,6 +37,10 @@ export function ConversationHistoryPage() {
   const [recommendations] = useAtom(recommendationsAtom);
   const [timelineItems] = useAtom(timelineItemsAtom);
   const [user] = useAtom(userAtom);
+  
+  // Hooks
+  const navigate = useNavigate();
+  const { navigateWithSubscriptionCheck } = useSubscriptionCheck();
   
   // Local state
   const [activeTab, setActiveTab] = useState<'history' | 'insights' | 'progress' | 'timeline'>('history');
@@ -147,8 +153,19 @@ export function ConversationHistoryPage() {
   }, [userId]);
   
   // Handle conversation selection
-  const handleConversationSelect = (conversation: ConversationSummary) => {
-    setSelectedConversationId(conversation.id);
+  const handleConversationSelect = async (conversation: ConversationSummary) => {
+    // If conversation is completed and user wants to continue, check subscription
+    if (conversation.status === 'completed') {
+      // Navigate to consultation page with continue parameter, subscription will be checked there
+      await navigateWithSubscriptionCheck(
+        `/consultation?continue=${conversation.id}`,
+        'conversation',
+        { estimatedDuration: 30 }
+      );
+    } else {
+      // For viewing details, just set the selected conversation
+      setSelectedConversationId(conversation.id);
+    }
   };
   
   // Handle back button click

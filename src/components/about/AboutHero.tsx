@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { Button } from '../ui/Button-bkp';
+import { Button } from '../ui/Button';
 
 export function AboutHero() {
   const scrollToContact = () => {
