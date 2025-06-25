@@ -26,7 +26,7 @@ export function Home() {
       <PricingSection />
       
       {/* Sticky Bolt Logo */}
-      <StickyBoltLogo size=lg/>
+      <StickyBoltLogo />
     </div>
   );
 }
