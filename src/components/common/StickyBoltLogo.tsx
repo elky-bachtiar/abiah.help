@@ -80,7 +80,7 @@ export function StickyBoltLogo({
         href="https://bolt.new/?rid=dm8ttl."
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-24 h-24  rounded-full shadow-lg transition-transform"
+        className="block w-24 h-24 rounded-full shadow-lg transition-transform"
         whileHover={{ scale: 1.1, rotate: 5 }}
         whileTap={{ scale: 0.95 }}
         title="Built with Bolt"
