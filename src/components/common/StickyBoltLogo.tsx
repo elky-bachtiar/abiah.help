@@ -19,16 +19,17 @@ export function StickyBoltLogo({
   const [isVisible, setIsVisible] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [logoSize, setLogoSize] = useState<'sm' | 'md' | 'lg'>(size);
 
-  // Determine if dark mode should be used
+  // Detect preferred dark mode initially and on system change
   useEffect(() => {
     if (theme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setIsDarkMode(prefersDark);
-      
+
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
-      
+
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
@@ -36,26 +37,32 @@ export function StickyBoltLogo({
     }
   }, [theme]);
 
-  // Handle scroll behavior
+  // Scroll handler for visibility, size, and dynamic theme based on scroll depth
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
-      // Hide on scroll down, show on scroll up
+
+      // Show/hide on scroll direction
       if (currentScrollY > lastScrollY + 50) {
         setIsVisible(false);
-        setLastScrollY(currentScrollY);
+        setLogoSize('sm');
       } else if (currentScrollY < lastScrollY - 50) {
         setIsVisible(true);
-        setLastScrollY(currentScrollY);
+        setLogoSize('md');
       }
+
+      // Dynamically toggle theme if auto, based on scroll depth
+      if (theme === 'auto') {
+        setIsDarkMode(currentScrollY < 500); // Dark when near top
+      }
+
+      setLastScrollY(currentScrollY);
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, [lastScrollY, theme]);
 
-  // Determine position classes
   const positionClasses = {
     'bottom-right': 'bottom-4 right-4',
     'bottom-left': 'bottom-4 left-4',
@@ -63,15 +70,13 @@ export function StickyBoltLogo({
     'top-left': 'top-4 left-4'
   };
 
-  // Determine size classes
   const sizeClasses = {
-    'sm': 'w-10 h-10',
-    'md': 'w-14 h-14',
-    'lg': 'w-20 h-20'
+    sm: 'w-10 h-10',
+    md: 'w-14 h-14',
+    lg: 'w-20 h-20'
   };
 
-  // Get the appropriate logo based on theme
-  const logoSrc = isDarkMode 
+  const logoSrc = isDarkMode
     ? '/images/bolt/bolt-white_circle_360x360.png'
     : '/images/bolt/bolt-black_circle_360x360.png';
 
@@ -95,7 +100,7 @@ export function StickyBoltLogo({
         rel="noopener noreferrer"
         className={cn(
           'block rounded-full shadow-lg transition-transform duration-300',
-          sizeClasses[size],
+          sizeClasses[logoSize],
           isHovered ? 'scale-110' : 'scale-100'
         )}
         whileHover={{ rotate: 10 }}
