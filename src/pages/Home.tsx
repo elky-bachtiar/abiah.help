@@ -2,6 +2,7 @@ import React from 'react';
 import { HeroSection } from '../components/hero/HeroSection';
 import { TeamSection } from '../components/team/TeamSection';
 import { PricingSection } from '../components/pricing/PricingSection';
+import { StickyBoltLogo } from '../components/common/StickyBoltLogo';
  
 export function Home() {
   return (
@@ -23,6 +24,9 @@ export function Home() {
       
       {/* Pricing Section */}
       <PricingSection />
+      
+      {/* Sticky Bolt Logo */}
+      <StickyBoltLogo />
     </div>
   );
 }
