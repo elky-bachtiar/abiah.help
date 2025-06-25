@@ -17,43 +17,46 @@ export function StickyBoltLogo({
   const pricingRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    heroRef.current = document.querySelector('section.hero-gradient');
-    consultationRef.current = document.getElementById('consultation-section');
-    pricingRef.current = document.querySelector('section.bg-background-secondary');
+  heroRef.current = document.querySelector('section.hero-gradient');
+  consultationRef.current = document.getElementById('consultation-section');
+  pricingRef.current = document.querySelector('section.bg-background-secondary');
+  const footerRef = document.querySelector('footer');
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleSections = entries.filter(entry => entry.isIntersecting).map(entry => entry.target.id || entry.target.className);
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .map((entry) => entry.target);
 
-        // If Hero is in view, use white logo
-        if (visibleSections.some(id => id.includes('hero-gradient'))) {
-          setUseWhiteLogo(true);
-        }
-        // If consultation or pricing is visible, use black logo
-        else if (
-          visibleSections.some(id =>
-            id.includes('consultation-section') ||
-            id.includes('bg-background-secondary')
-          )
-        ) {
-          setUseWhiteLogo(false);
-        }
-      },
-      {
-        threshold: 0.5,
+      const isHeroVisible = visible.includes(heroRef.current);
+      const isFooterVisible = visible.includes(footerRef);
+      const isLightSectionVisible =
+        visible.includes(consultationRef.current) || visible.includes(pricingRef.current);
+
+      if (isHeroVisible || isFooterVisible) {
+        setUseWhiteLogo(true); // White in hero or footer
+      } else if (isLightSectionVisible) {
+        setUseWhiteLogo(false); // Black logo in consultation or pricing
       }
-    );
+    },
+    {
+      threshold: 0.5,
+    }
+  );
 
-    if (heroRef.current) observer.observe(heroRef.current);
-    if (consultationRef.current) observer.observe(consultationRef.current);
-    if (pricingRef.current) observer.observe(pricingRef.current);
+  if (heroRef.current) observer.observe(heroRef.current);
+  if (consultationRef.current) observer.observe(consultationRef.current);
+  if (pricingRef.current) observer.observe(pricingRef.current);
+  if (footerRef) observer.observe(footerRef);
 
-    return () => {
-      if (heroRef.current) observer.unobserve(heroRef.current);
-      if (consultationRef.current) observer.unobserve(consultationRef.current);
-      if (pricingRef.current) observer.unobserve(pricingRef.current);
-    };
-  }, []);
+  return () => {
+    if (heroRef.current) observer.unobserve(heroRef.current);
+    if (consultationRef.current) observer.unobserve(consultationRef.current);
+    if (pricingRef.current) observer.unobserve(pricingRef.current);
+    if (footerRef) observer.unobserve(footerRef);
+  };
+}, []);
+
 
   const positionClasses = {
     'bottom-right': 'bottom-4 right-4',
