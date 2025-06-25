@@ -127,7 +127,7 @@ CREATE INDEX IF NOT EXISTS idx_subscription_limits_tier ON subscription_limits(t
 CREATE INDEX IF NOT EXISTS idx_subscription_limits_price_id ON subscription_limits(price_id);
 
 CREATE INDEX IF NOT EXISTS idx_usage_tracking_user_period ON user_usage_tracking(user_id, period_start, period_end);
-CREATE INDEX IF NOT EXISTS idx_usage_tracking_user_current ON user_usage_tracking(user_id, period_end) WHERE period_end > NOW();
+CREATE INDEX IF NOT EXISTS idx_usage_tracking_user_current ON user_usage_tracking(user_id, period_end);
 
 CREATE INDEX IF NOT EXISTS idx_conversation_usage_user ON conversation_usage_details(user_id);
 CREATE INDEX IF NOT EXISTS idx_conversation_usage_tracking ON conversation_usage_details(usage_tracking_id);
