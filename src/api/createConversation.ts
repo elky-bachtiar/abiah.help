@@ -3,11 +3,37 @@ import { settingsAtom } from "@/store/settings";
 import { getDefaultStore } from "jotai";
 import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
+import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
+
+export interface ConversationCreationResult {
+  conversation?: IConversation;
+  validation: ValidationResponse;
+  success: boolean;
+  error?: string;
+}
 
 export const createConversation = async (
   userId?: string,
   title?: string
 ): Promise<IConversation> => {
+  // Validate subscription limits before creating conversation
+  if (!userId) {
+    throw new Error('User ID is required to create a conversation');
+  }
+
+  // Check subscription limits first
+  const validation = await canStartConversation(userId);
+  
+  if (!validation.allowed) {
+    const errorMessage = validation.errors?.join(', ') || 'Subscription limits exceeded';
+    throw new Error(`Cannot start conversation: ${errorMessage}`);
+  }
+
+  // Log warnings if any
+  if (validation.warnings && validation.warnings.length > 0) {
+    console.warn('Conversation creation warnings:', validation.warnings);
+  }
+
   // Get settings from Jotai store
   const settings = getDefaultStore().get(settingsAtom);
   const default_context = `Abiah is a world-class AI startup mentor and virtual persona trained on thousands of successful venture deals, startup journeys, and pitch outcomes. Designed to serve as a digital mentor for early-stage founders, Abiah embodies the combined wisdom of legendary venture capitalists, elite accelerator coaches, and founder-turned-investors. His mission is singular and focused: to guide founders with strategic clarity, emotional strength, and investor-ready precision until they secure the funding they need.
@@ -122,5 +148,88 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   } catch (error) {
     console.error('Error creating conversation:', error);
     throw new Error(`Failed to create conversation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+/**
+ * Enhanced conversation creation with detailed validation response
+ * Use this for UI components that need to handle subscription warnings/errors gracefully
+ */
+export const createConversationWithValidation = async (
+  userId?: string,
+  title?: string
+): Promise<ConversationCreationResult> => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: 'User ID is required to create a conversation',
+        validation: {
+          allowed: false,
+          subscription_status: 'none',
+          current_usage: { sessions_used: 0, minutes_used: 0, documents_generated: 0, tokens_consumed: 0 },
+          limits: { max_sessions: 0, max_minutes: 0, max_documents: 0, max_tokens: 0 },
+          remaining: { sessions: 0, minutes: 0, documents: 0, tokens: 0 },
+          upgrade_required: true,
+          errors: ['User ID is required'],
+          tier_info: {
+            current_tier: 'none',
+            allows_team_access: false,
+            allows_custom_personas: false,
+            allows_unlimited_tokens: false
+          }
+        }
+      };
+    }
+
+    // Check subscription limits first
+    const validation = await canStartConversation(userId);
+    
+    if (!validation.allowed) {
+      return {
+        success: false,
+        error: validation.errors?.join(', ') || 'Subscription limits exceeded',
+        validation
+      };
+    }
+
+    // Create the conversation
+    const conversation = await createConversation(userId, title);
+    
+    return {
+      success: true,
+      conversation,
+      validation
+    };
+  } catch (error) {
+    console.error('Error in createConversationWithValidation:', error);
+    
+    // Try to get user's current usage for error context
+    let validation: ValidationResponse;
+    try {
+      validation = await canStartConversation(userId || '');
+    } catch (validationError) {
+      validation = {
+        allowed: false,
+        subscription_status: 'unknown',
+        current_usage: { sessions_used: 0, minutes_used: 0, documents_generated: 0, tokens_consumed: 0 },
+        limits: { max_sessions: 0, max_minutes: 0, max_documents: 0, max_tokens: 0 },
+        remaining: { sessions: 0, minutes: 0, documents: 0, tokens: 0 },
+        upgrade_required: true,
+        errors: ['Unable to validate subscription'],
+        tier_info: {
+          current_tier: 'unknown',
+          allows_team_access: false,
+          allows_custom_personas: false,
+          allows_unlimited_tokens: false
+        }
+      };
+    }
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      validation
+    };
   }
 };

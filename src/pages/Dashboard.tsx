@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAtom } from 'jotai';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Video, FileText, BarChart3, Calendar, ArrowRight, Clock, CheckCircle } from 'lucide-react';
 import { SubscriptionCard } from '../components/dashboard/SubscriptionCard';
-import { userDisplayNameAtom } from '../store/auth'; 
+import { userDisplayNameAtom, userAtom } from '../store/auth'; 
 import { Button } from '../components/ui/Button-bkp';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { SubscriptionGuard } from '../components/subscription/SubscriptionGuard';
 
 export function Dashboard() {
   const [displayName] = useAtom(userDisplayNameAtom);
+  const [user] = useAtom(userAtom);
+  const navigate = useNavigate();
+  const [showSubscriptionGuard, setShowSubscriptionGuard] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  const handleQuickAction = (action: { href: string; title: string }) => {
+    if (action.href === '/consultation') {
+      setPendingAction('/consultation');
+      setShowSubscriptionGuard(true);
+    } else {
+      navigate(action.href);
+    }
+  };
+
+  const handleSubscriptionProceed = () => {
+    setShowSubscriptionGuard(false);
+    if (pendingAction) {
+      navigate(pendingAction);
+      setPendingAction(null);
+    }
+  };
+
+  const handleSubscriptionCancel = () => {
+    setShowSubscriptionGuard(false);
+    setPendingAction(null);
+  };
 
   const quickActions = [
     {
@@ -131,7 +159,7 @@ export function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
                   >
-                    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
+                    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleQuickAction(action)}>
                       <CardContent className="p-6">
                         <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${action.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
                           <IconComponent className="w-6 h-6 text-white" />
@@ -140,7 +168,10 @@ export function Dashboard() {
                           {action.title}
                         </h3>
                         <p className="text-text-secondary mb-4">{action.description}</p>
-                        <Button variant="ghost" size="sm" className="group-hover:bg-primary/10">
+                        <Button variant="ghost" size="sm" className="group-hover:bg-primary/10" onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuickAction(action);
+                        }}>
                           Get Started
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -230,6 +261,19 @@ export function Dashboard() {
           </div>
         </motion.div>
       </div>
+      
+      {/* Subscription Guard Modal */}
+      {showSubscriptionGuard && user?.id && (
+        <SubscriptionGuard
+          userId={user.id}
+          actionType="conversation"
+          estimatedDuration={30}
+          estimatedTokens={2000}
+          onProceed={handleSubscriptionProceed}
+          onCancel={handleSubscriptionCancel}
+          showUsageSummary={true}
+        />
+      )}
     </div>
   );
 }

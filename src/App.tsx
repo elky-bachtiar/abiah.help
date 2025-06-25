@@ -10,6 +10,7 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import { Home } from './pages/Home';
+import { Home as Main2Home } from './pages/main2/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -22,7 +23,9 @@ import { AboutPage } from './pages/AboutPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { Settings } from './pages/Settings';
 import { CheckoutSuccess } from './pages/CheckoutSuccess';
+import { ConversationHistoryPage } from './pages/ConversationHistoryPage';
 import { ThemeProvider } from './context/ThemeContext';
+import { SubscriptionRouteGuard } from './components/guards/SubscriptionRouteGuard';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -123,7 +126,9 @@ function AppContent() {
                   path="/consultation" 
                   element={
                     <ProtectedRoute>
-                      <Consultation />
+                      <SubscriptionRouteGuard actionType="conversation">
+                        <Consultation />
+                      </SubscriptionRouteGuard>
                     </ProtectedRoute>
                   } 
                 />
@@ -164,6 +169,14 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <SubscriptionPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/conversation-history" 
+                  element={
+                    <ProtectedRoute>
+                      <ConversationHistoryPage />
                     </ProtectedRoute>
                   } 
                 />

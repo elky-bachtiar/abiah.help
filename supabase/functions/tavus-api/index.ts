@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Hardcode API key for testing purposes only
 // NEVER do this in production code
@@ -12,6 +13,38 @@ interface TavusRequest {
   endpoint: string
   payload?: any
   headers?: Record<string, string>
+}
+
+interface ValidationResponse {
+  allowed: boolean
+  subscription_status: string
+  current_usage: {
+    sessions_used: number
+    minutes_used: number
+    documents_generated: number
+    tokens_consumed: number
+  }
+  limits: {
+    max_sessions: number
+    max_minutes: number
+    max_documents: number
+    max_tokens: number
+  }
+  remaining: {
+    sessions: number
+    minutes: number
+    documents: number
+    tokens: number
+  }
+  warnings?: string[]
+  errors?: string[]
+  upgrade_required: boolean
+  tier_info: {
+    current_tier: string
+    allows_team_access: boolean
+    allows_custom_personas: boolean
+    allows_unlimited_tokens: boolean
+  }
 }
 
 // Simple CORS headers like in the send-email function
@@ -33,8 +66,32 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase client for subscription validation
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     // Log headers for debugging
     console.log('[DEBUG] Request headers:', Object.fromEntries(req.headers.entries()));
+    
+    // Get authenticated user from request
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) {
+      return createErrorResponse('Authentication required', 401)
+    }
+
+    // Extract user from JWT token
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    )
+
+    if (authError || !user) {
+      console.error('[DEBUG] Authentication error:', authError)
+      return createErrorResponse('Invalid authentication', 401)
+    }
+
+    console.log('[DEBUG] Authenticated user:', user.id)
     
     // Parse the request body
     let requestBody: TavusRequest;
@@ -43,24 +100,62 @@ serve(async (req) => {
       console.log('[DEBUG] Request body parsed:', requestBody);
     } catch (error) {
       console.error('[DEBUG] Error parsing JSON request:', error);
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON request' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      return createErrorResponse('Invalid JSON request', 400);
     }
 
     // Basic validation
     if (!requestBody || !requestBody.endpoint) {
-      return new Response(
-        JSON.stringify({ error: 'Missing endpoint in request' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      return createErrorResponse('Missing endpoint in request', 400);
+    }
+
+    // SUBSCRIPTION VALIDATION - Check if this is a conversation creation request
+    if (requestBody.endpoint === '/v2/conversations' && requestBody.method === 'POST') {
+      console.log('[DEBUG] Conversation creation detected, validating subscription...')
+      
+      // Call subscription validator
+      const validationRequest = {
+        user_id: user.id,
+        action_type: 'conversation' as const,
+        estimated_duration_minutes: 30 // Default estimate
+      }
+
+      const { data: validation, error: validationError } = await supabaseClient.functions.invoke(
+        'subscription-validator',
+        { body: validationRequest }
+      )
+
+      if (validationError) {
+        console.error('[DEBUG] Subscription validation error:', validationError)
+        return createErrorResponse('Subscription validation failed', 500)
+      }
+
+      console.log('[DEBUG] Subscription validation result:', validation)
+
+      // Block the request if not allowed
+      if (!validation.allowed) {
+        const errorMessage = validation.errors?.join(', ') || 'Subscription limits exceeded'
+        console.log('[DEBUG] Blocking conversation creation:', errorMessage)
+        
+        return new Response(
+          JSON.stringify({
+            error: 'Subscription limits exceeded',
+            details: errorMessage,
+            validation: validation,
+            upgrade_required: validation.upgrade_required
+          }),
+          {
+            status: 403, // Forbidden
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+
+      // Log warnings if any
+      if (validation.warnings && validation.warnings.length > 0) {
+        console.warn('[DEBUG] Conversation creation warnings:', validation.warnings)
+      }
+
+      console.log('[DEBUG] Subscription validation passed, proceeding with conversation creation')
     }
 
     // Prepare headers for Tavus API request
