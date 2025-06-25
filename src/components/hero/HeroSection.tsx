@@ -23,7 +23,7 @@ export function HeroSection() {
     : "Get funded through face-to-face video consultations with industry-specific AI mentors.";
 
   return (
-    <section className="relative min-h-screen hero-gradient overflow-hidden hero-gradient">
+    <section className="relative min-h-screen hero-gradient overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
