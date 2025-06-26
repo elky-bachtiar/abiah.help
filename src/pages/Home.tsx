@@ -164,7 +164,7 @@ export function Home() {
                 size="lg"
                 variant="secondary"
                 className="group"
-                onClick={() => window.open('https://investor-deck.abiah.help', '_blank')}
+                onClick={() => window.open('https://abiah.help/pitchdeck', '_blank')}
               >
                 <span>View Investor Deck</span>
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

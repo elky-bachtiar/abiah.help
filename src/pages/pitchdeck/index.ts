@@ -1,0 +1,1 @@
+export { PitchDeck } from './PitchDeck';

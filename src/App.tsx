@@ -11,6 +11,7 @@ import { Footer } from './components/layout/Footer';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import { Home } from './pages/Home';
 import { Home as Main2Home } from './pages/main2/Home';
+import { PitchDeck } from './pages/pitchdeck';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -85,17 +86,25 @@ function AppContent() {
     <Router>
       <ThemeProvider>
         <StripeProvider>
-          <div className="min-h-screen flex flex-col bg-background-primary">
-            <Header />
-          
-            <main className="flex-1">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/team" element={<TeamPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Routes>
+            {/* Main2 Route - No Header/Footer */}
+            <Route path="/main2" element={<Main2Home />} />
+            
+            {/* Pitch Deck Route - No Header/Footer */}
+            <Route path="/pitchdeck" element={<PitchDeck />} />
+            
+            {/* All other routes with Header/Footer */}
+            <Route path="*" element={
+              <div className="min-h-screen flex flex-col bg-background-primary">
+                <Header />
+                <main className="flex-1">
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Home />} />
+                    <Route path="/team" element={<TeamPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 <Route 
                   path="/login" 
                   element={
@@ -181,26 +190,28 @@ function AppContent() {
                   } 
                 />
 
-                {/* Catch all route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
+                    {/* Catch all route */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </main>
 
-            <Footer />
+                <Footer />
+              </div>
+            } />
+          </Routes>
           
-            {/* Toast Notifications */}
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#2A2F6D',
-                  color: '#FFFFFF',
-                  border: '1px solid #F9B94E',
-                },
-              }}
-            />
-          </div>
+          {/* Toast Notifications */}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#2A2F6D',
+                color: '#FFFFFF',
+                border: '1px solid #F9B94E',
+              },
+            }}
+          />
         </StripeProvider>
       </ThemeProvider>
     </Router>
