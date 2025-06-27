@@ -160,15 +160,12 @@ export function Home() {
                 </div>
               </div>
               
-              <Button
-                size="lg"
-                variant="secondary"
-                className="group"
-                onClick={() => window.open('https://abiah.help/pitchdeck', '_blank')}
-              >
-                <span>View Investor Deck</span>
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <Link to="/pitchdeck" style={{ textDecoration: 'none' }}>
+  <Button size="lg" variant="secondary" className="group">
+    <span>View Investor Deck</span>
+    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+  </Button>
+</Link>
             </motion.div>
             
             <motion.div
