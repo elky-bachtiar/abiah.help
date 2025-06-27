@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play, Sparkles, Zap, Shield, TrendingUp, ChevronDown, Star, Check, Globe, Rocket, Brain, MessageSquare, Clock, Award, Target, X, Users, DollarSign } from 'lucide-react';
