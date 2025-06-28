@@ -191,7 +191,9 @@ Deno.serve(async (req) => {
        ...(mode === 'subscription' && trial_period_days
     ? {
         subscription_data: {
-          trial_period_days,
+          trial_settings: {
+            trial_period_days,
+          },
         },
       }
     : {}),
