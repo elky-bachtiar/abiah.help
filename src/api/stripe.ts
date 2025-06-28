@@ -18,6 +18,8 @@ export async function createCheckoutSession(
       throw new Error('You must be logged in to make a purchase');
     }
 
+    console.log(`Creating checkout session for price: ${priceId}, mode: ${mode}, trial days: ${trialDays}`);
+
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
       method: 'POST',
       headers: {
@@ -33,6 +35,25 @@ export async function createCheckoutSession(
       }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Checkout API error:', errorData);
+      throw new Error(errorData.error || 'Failed to create checkout session');
+    }
+
+    const { sessionId, url } = await response.json();
+    
+    console.log(`Checkout session created: ${sessionId}, redirecting to: ${url}`);
+    
+    // Ensure we have a valid URL before redirecting
+    if (!url) {
+      console.error('No checkout URL returned from API');
+      throw new Error('Failed to get checkout URL');
+    }
+    
+    // Use window.location.href for a full page redirect to Stripe
+    window.location.href = url;
+    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to create checkout session');

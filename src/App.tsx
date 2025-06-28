@@ -9,6 +9,7 @@ import { isAuthenticatedAtom, authLoadingAtom } from './store/auth';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import { SubscriptionRouteGuard } from './components/guards/SubscriptionRouteGuard';
 import { Home } from './pages/Home';
 import { Home as Main2Home } from './pages/main2/Home';
 import { PitchDeck } from './pages/pitchdeck';
@@ -145,7 +146,9 @@ function AppContent() {
                   path="/documents" 
                   element={
                     <ProtectedRoute>
-                      <Documents />
+                      <SubscriptionRouteGuard actionType="document_generation">
+                        <Documents />
+                      </SubscriptionRouteGuard>
                     </ProtectedRoute>
                   } 
                 />
@@ -153,7 +156,9 @@ function AppContent() {
                   path="/documents/:id" 
                   element={
                     <ProtectedRoute>
-                      <Documents />
+                      <SubscriptionRouteGuard actionType="document_generation">
+                        <Documents />
+                      </SubscriptionRouteGuard>
                     </ProtectedRoute>
                   } 
                 />

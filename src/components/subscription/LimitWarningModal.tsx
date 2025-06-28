@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   AlertTriangle, 
   Clock, 
@@ -295,6 +296,7 @@ export function useLimitWarningModal() {
   const [validation, setValidation] = React.useState<ValidationResponse | null>(null);
   const [actionType, setActionType] = React.useState<'conversation' | 'document_generation'>('conversation');
   const [estimatedUsage, setEstimatedUsage] = React.useState<{minutes?: number; tokens?: number}>({});
+  const navigate = useNavigate();
 
   const showWarning = (
     validationResult: ValidationResponse, 

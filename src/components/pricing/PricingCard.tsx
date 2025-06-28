@@ -52,8 +52,8 @@ export function PricingCard({
     try {
       setIsLoading(true);
       // Add trial period for subscription mode
-      const { url } = await createCheckoutSession(priceId, mode, hasTrial ? 5 : undefined);
-      window.location.href = url;
+      await createCheckoutSession(priceId, mode, hasTrial ? 5 : undefined);
+      // Note: createCheckoutSession now handles the redirect internally
     } catch (error) {
       console.error('Error creating checkout session:', error);
       alert('Failed to create checkout session. Please try again.');
