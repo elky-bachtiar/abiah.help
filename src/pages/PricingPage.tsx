@@ -100,7 +100,7 @@ export function PricingPage() {
                   <summary className="flex justify-between items-center font-medium cursor-pointer p-6">
                     <h3 className="text-lg font-semibold text-primary">{faq.question}</h3>
                     <span className="transition group-open:rotate-180">
-                      <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                      <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="24">
                         <path d="M6 9l6 6 6-6"></path>
                       </svg>
                     </span>
@@ -123,7 +123,7 @@ export function PricingPage() {
             >
               Contact our sales team
               <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
               </svg>
             </a>
           </div>
