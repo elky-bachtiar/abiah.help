@@ -192,7 +192,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                       window.location.href = 'mailto:hello@abiah.help';
                     } else {
                       // Handle subscription flow
-                      createCheckoutSession(plan.priceId, 'subscription', 5);
+                      createCheckoutSession(plan.priceId, 'subscription', 5, true);
                     }
                   }}
                 >
