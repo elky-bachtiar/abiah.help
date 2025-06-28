@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Star, MessageSquare, Users, Crown, ArrowRight } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { createCheckoutSession } from '../../api/stripe';
 
 interface PricingSectionProps {
   hideSupport?: boolean;
@@ -12,7 +13,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
   
   const plans = [
     {
-      id: 'prod_SYErznlRJrJHln', // Founder Essential
+      id: 'prod_SYErznlRJrJHln',
       name: "Founder Essential",
       price: isAnnual ? 79 : 99,
       originalPrice: isAnnual ? 99 : null,
@@ -26,10 +27,10 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
       ],
       popular: false,
       gradient: "from-blue-500 to-blue-600",
-      priceId: isAnnual ? 'price_1Rd8NVD5a0uk1qUEQSEg8jCp' : 'price_1RdT9CD5a0uk1qUEP1jnRYQi'
+      priceId: isAnnual ? 'price_1RdT9CD5a0uk1qUEP1jnRYQi' : 'price_1Rd8NVD5a0uk1qUEQSEg8jCp'
     },
     {
-      id: 'prod_SYZzwqHSFjVPjm', // Founder Companion
+      id: 'prod_SYZzwqHSFjVPjm',
       name: "Founder Companion",
       price: isAnnual ? 159 : 199,
       originalPrice: isAnnual ? 199 : null,
@@ -43,7 +44,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
       ],
       popular: true,
       gradient: "from-primary to-secondary",
-      priceId: isAnnual ? 'price_1RdSpQD5a0uk1qUEmESxoySs' : 'price_1RdTV9D5a0uk1qUEhqJKCcU8'
+      priceId: isAnnual ? 'price_1RdTV9D5a0uk1qUEhqJKCcU8' : 'price_1RdSpQD5a0uk1qUEmESxoySs'
     },
     {
       name: "Enterprise",
@@ -191,7 +192,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                       window.location.href = 'mailto:hello@abiah.help';
                     } else {
                       // Handle subscription flow
-                      console.log('Starting subscription for:', plan.priceId);
+                      createCheckoutSession(plan.priceId, 'subscription', 5);
                     }
                   }}
                 >
