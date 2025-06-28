@@ -61,6 +61,8 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     contextString = `You are talking with the user, ${settings.name}. `;
   }
   contextString += settings.context || default_context;
+
+  console.log('VITE_ENABLE_LLM_TOOLS', VITE_ENABLE_LLM_TOOLS);
   
   // If a full payload override is provided in settings, use it
   const payload = settings.payload ?? {
