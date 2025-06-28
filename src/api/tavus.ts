@@ -1,5 +1,7 @@
 import { callEdgeFunction } from '@/lib/supabase'
 
+const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.abiah.help';
+
 interface TavusRequestOptions {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
   endpoint: string
@@ -29,7 +31,8 @@ interface TavusResponse<T = any> {
 export async function callTavusAPI<T = any>(
   options: TavusRequestOptions | string,
   data?: Record<string, any>,
-  useTestEndpoint = false
+  useTestEndpoint = false,
+  retryCount = 0
 ): Promise<T> {
   // Debug: log the input arguments
   console.log('[DEBUG] callTavusAPI called with:', { options, data, useTestEndpoint });
@@ -50,26 +53,51 @@ export async function callTavusAPI<T = any>(
     console.log(`[DEBUG] Tavus Edge Function (${useTestEndpoint ? 'test endpoint' : 'production endpoint'}) with:`, edgeFunctionBody);
     // Use either test or production endpoint
     const endpoint = useTestEndpoint ? 'tavus-api-test' : 'tavus-api';
-    const response = await callEdgeFunction<TavusResponse<T>>(endpoint, edgeFunctionBody);
-    // Debug: log the raw response from the Edge Function
-    console.log('[DEBUG] Edge Function response:', response);
-    if (response?.error) {
-      console.error('[DEBUG] Edge Function returned error:', response.error, response.details);
+    
+    try {
+      const response = await callEdgeFunction<TavusResponse<T>>(endpoint, edgeFunctionBody);
+      // Debug: log the raw response from the Edge Function
+      console.log('[DEBUG] Edge Function response:', response);
+      if (response?.error) {
+        console.error('[DEBUG] Edge Function returned error:', response.error, response.details);
+        
+        // Check if the error is related to enable_llm_tools
+        if (response.error.includes('enable_llm_tools') && retryCount === 0) {
+          console.log('[DEBUG] Detected enable_llm_tools error, retrying without this property');
+          
+          // Remove the problematic property and retry
+          if (requestOptions.method === 'POST' && requestOptions.data?.properties) {
+            const newPayload = { ...requestOptions.data };
+            if (newPayload.properties && 'enable_llm_tools' in newPayload.properties) {
+              delete newPayload.properties.enable_llm_tools;
+              console.log('[DEBUG] Retrying without enable_llm_tools property');
+              return callTavusAPI<T>(
+                { ...requestOptions, data: newPayload },
+                undefined,
+                useTestEndpoint,
+                retryCount + 1
+              );
+            }
+          }
+        }
+        
+        throw new Error(
+          response.error + (response.details ? `: ${JSON.stringify(response.details)}` : '')
+        );
+      }
+      
+      // Debug: log the parsed data returned
+      console.log('[DEBUG] Tavus API parsed data:', response?.data);
+      return response?.data as T;
+    } catch (error) {
+      console.error('Tavus API Error:', error);
       throw new Error(
-        response.error + (response.details ? `: ${JSON.stringify(response.details)}` : '')
-      )
+        error instanceof Error 
+          ? error.message 
+          : 'An unknown error occurred while calling Tavus API'
+      );
     }
-    // Debug: log the parsed data returned
-    console.log('[DEBUG] Tavus API parsed data:', response?.data);
-    return response?.data as T
-  } catch (error) {
-    console.error('Tavus API Error:', error)
-    throw new Error(
-      error instanceof Error 
-        ? error.message 
-        : 'An unknown error occurred while calling Tavus API'
-    )
-  }
+    // Debug: log the raw response from the Edge Function
 }
 
 /**

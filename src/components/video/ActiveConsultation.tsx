@@ -85,7 +85,7 @@ export function ActiveConsultation() {
         await daily?.join({
           url: conversation.conversation_url,
           startVideoOff: false,
-          startAudioOff: true,
+          startAudioOff: false,
         });
 
         setSessionTimer(prev => ({
@@ -160,34 +160,43 @@ export function ActiveConsultation() {
   return (
     <div>
       <SessionTimer />
-      <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Render local video */}
         {localSessionId && (
-          <video
-            autoPlay
-            muted
-            playsInline
-            ref={videoEl => {
-              if (videoEl && localVideo?.track) {
-                videoEl.srcObject = new MediaStream([localVideo.track]);
-              }
-            }}
-            style={{ width: 320, height: 240, background: '#111' }}
-          />
+          <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <video
+              autoPlay
+              muted
+              playsInline
+              ref={videoEl => {
+                if (videoEl && localVideo?.track) {
+                  videoEl.srcObject = new MediaStream([localVideo.track]);
+                }
+              }}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+              You
+            </div>
+          </div>
         )}
         {/* Render remote videos */}
         {remoteVideos.map(({ pid, videoTrack }) => (
-          <video
-            key={pid}
-            autoPlay
-            playsInline
-            ref={videoEl => {
-              if (videoEl && videoTrack?.track) {
-                videoEl.srcObject = new MediaStream([videoTrack.track]);
-              }
-            }}
-            style={{ width: 320, height: 240, background: '#111' }}
-          />
+          <div key={pid} className="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <video
+              autoPlay
+              playsInline
+              ref={videoEl => {
+                if (videoEl && videoTrack?.track) {
+                  videoEl.srcObject = new MediaStream([videoTrack.track]);
+                }
+              }}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+              AI Mentor
+            </div>
+          </div>
         ))}
       </div>
       <VideoControls

@@ -13,7 +13,7 @@ export function VideoControls({ onToggleCamera, onToggleMic, onEndCall }: VideoC
   const [videoControls] = useAtom(videoControlsAtom);
 
   return (
-    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
       <div className="flex items-center gap-3 bg-black/70 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
         {/* Camera Toggle */}
         <button
