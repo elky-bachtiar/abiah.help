@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAtom } from 'jotai';
 import { useDaily, useLocalSessionId, useParticipantIds, useVideoTrack, useAudioTrack } from '@daily-co/daily-react';
 import { 
@@ -33,13 +33,14 @@ function useRemoteVideoTracks(remoteParticipantIds, maxParticipants = 8) {
 export function ActiveConsultation() {
   const [consultationContext] = useAtom(consultationContextAtom);
   const [, setCurrentScreen] = useAtom(conversationScreenAtom);
+  const [activeConversationId, setActiveConversationId] = useAtom(activeConversationIdAtom);
   const [videoControls, setVideoControls] = useAtom(videoControlsAtom);
   const [sessionTimer, setSessionTimer] = useAtom(sessionTimerAtom);
-  const [activeConversationId, setActiveConversationId] = useAtom(activeConversationIdAtom);
   const [user] = useAtom(userAtom);
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [tavusConversationId, setTavusConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isInitializedRef = useRef(false);
 
   // Daily hooks
   const daily = useDaily();
@@ -48,10 +49,15 @@ export function ActiveConsultation() {
   const localVideo = useVideoTrack(localSessionId);
   const localAudio = useAudioTrack(localSessionId);
 
-  // SAFELY get remote video tracks
+  // Get remote video and audio tracks
   const remoteVideos = useRemoteVideoTracks(remoteParticipantIds);
+  const remoteAudios = useRemoteAudioTracks(remoteParticipantIds);
 
   useEffect(() => {
+    // Prevent duplicate initialization
+    if (isInitializedRef.current) return;
+    isInitializedRef.current = true;
+    
     setConversationUrl(null);
     setSessionTimer(prev => ({
       ...prev,
@@ -63,6 +69,12 @@ export function ActiveConsultation() {
 
     const initializeConsultation = async () => {
       try {
+        // Early exit if we already have a Tavus conversation ID
+        if (tavusConversationId) {
+          console.log('Conversation already initialized with ID:', tavusConversationId);
+          return;
+        }
+        
         setIsLoading(true);
         
         // Create Tavus conversation with context from settings screen
@@ -84,7 +96,7 @@ export function ActiveConsultation() {
         // Join the Daily call
         await daily?.join({
           url: conversation.conversation_url,
-          startVideoOff: false,
+          startVideoOff: false, 
           startAudioOff: false,
         });
 
@@ -198,6 +210,27 @@ export function ActiveConsultation() {
             </div>
           </div>
         ))}
+        
+        {/* Audio elements for remote participants */}
+        {remoteAudios.map(({ pid, audioTrack }) => (
+          <audio
+            key={`audio-${pid}`}
+            autoPlay
+            playsInline
+            ref={audioEl => {
+              if (audioEl && audioTrack?.track) {
+                // Create a new MediaStream with just the audio track
+                const stream = new MediaStream([audioTrack.track]);
+                // Set the stream as the source for the audio element
+                audioEl.srcObject = stream;
+                // Attempt to play the audio
+                audioEl.play().catch(err => {
+                  console.error('Error playing remote audio:', err);
+                });
+              }
+            }}
+          />
+        ))}
       </div>
       <VideoControls
         onToggleCamera={toggleCamera}
@@ -206,4 +239,24 @@ export function ActiveConsultation() {
       />
     </div>
   );
+}
+
+// Custom hook to get remote audio tracks
+function useRemoteAudioTracks(remoteParticipantIds: string[], maxParticipants = 8) {
+  // Always call the same number of hooks, up to maxParticipants
+  const tracks = [];
+  for (let i = 0; i < maxParticipants; i++) {
+    const pid = remoteParticipantIds[i];
+    tracks.push({
+      pid,
+      audioTrack: useAudioTrack(pid),
+    });
+  }
+  
+  // Log audio tracks for debugging
+  useEffect(() => {
+    console.log('Remote audio tracks:', tracks.filter(t => t.pid && t.audioTrack));
+  }, [tracks]);
+  
+  return tracks.filter(t => t.pid); // Only return those with a participant
 }

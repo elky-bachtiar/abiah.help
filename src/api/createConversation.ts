@@ -1,7 +1,7 @@
 import { IConversation } from "@/types";
 import { settingsAtom } from "@/store/settings";
 import { getDefaultStore } from "jotai";
-import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
+import { callTavusAPI } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
 
@@ -18,10 +18,41 @@ export interface ConversationCreationResult {
 export const createConversation = async (
   userId?: string,
   title?: string
-): Promise<IConversation> => {
+): Promise<IConversation | null> => {
   // Validate subscription limits before creating conversation
   if (!userId) {
     throw new Error('User ID is required to create a conversation');
+  }
+
+  // Check if there's already a conversation in progress for this user
+  try {
+    const { data: existingConversations } = await supabase
+      .from('conversations')
+      .select('id, tavus_conversation_id, status, title')
+      .eq('user_id', userId)
+      .eq('status', 'in_progress')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (existingConversations && existingConversations.length > 0) {
+      console.log('Found existing in-progress conversation:', existingConversations[0]);
+      
+      // If there's an existing conversation with a Tavus ID, return it
+      if (existingConversations[0].tavus_conversation_id) {
+        const existingConversation = await callTavusAPI<IConversation>({
+          method: 'GET',
+          endpoint: `/v2/conversations/${existingConversations[0].tavus_conversation_id}`
+        });
+        
+        if (existingConversation && existingConversation.status === 'active') {
+          console.log('Returning existing active conversation:', existingConversation);
+          return existingConversation;
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Error checking for existing conversations:', error);
+    // Continue with creating a new conversation
   }
 
   // Check subscription limits first
@@ -127,7 +158,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   try {
     // Call Tavus API through Supabase Edge Function
     const tavusConversation = await callTavusAPI<IConversation>({
-      method: 'POST',
+      method: 'POST', 
       endpoint: '/v2/conversations',
       data: payload,
       headers: customHeaders
@@ -148,7 +179,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     }
     
     return tavusConversation;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating conversation:', error);
     throw new Error(`Failed to create conversation: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
