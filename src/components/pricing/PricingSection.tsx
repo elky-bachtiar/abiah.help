@@ -188,7 +188,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                   } text-white group`}
                   onClick={() => {
                     if (plan.isEnterprise) {
-                      window.location.href = 'mailto:enterprise@abiah.help';
+                      window.location.href = 'mailto:hello@abiah.help';
                     } else {
                       // Handle subscription flow
                       console.log('Starting subscription for:', plan.priceId);
