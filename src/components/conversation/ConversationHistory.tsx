@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Calendar, Clock, Tag, ChevronDown, ChevronUp } from 'lucide-react';
@@ -52,6 +52,13 @@ export function ConversationHistory({
   // Local state
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   
+  // Refs to prevent multiple subscriptions
+  const subscriptionsRef = useRef<{
+    conversationChannel?: any;
+    tableChannel?: any;
+  }>({});
+  const isSubscribedRef = useRef(false);
+  
   // Load conversations from API
   const loadConversations = useCallback(async () => {
     if (!user?.id) return;
@@ -83,9 +90,30 @@ export function ConversationHistory({
   
   // Set up real-time subscriptions for conversation updates
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || isSubscribedRef.current) return;
     
     console.log('Setting up real-time subscription for user:', user.id);
+    isSubscribedRef.current = true;
+    
+    // Create a stable reference to loadConversations for the subscription callbacks
+    const reloadConversations = () => {
+      // Use the current user ID to avoid stale closures
+      if (user?.id) {
+        getConversationsForUser(user.id)
+          .then(fetchedConversations => {
+            setAllConversations(fetchedConversations);
+            setPagination(prev => ({
+              ...prev,
+              totalItems: fetchedConversations.length,
+              totalPages: Math.ceil(fetchedConversations.length / prev.pageSize)
+            }));
+          })
+          .catch(err => {
+            console.error('Error reloading conversations:', err);
+            setError(err instanceof Error ? err.message : 'Failed to reload conversations');
+          });
+      }
+    };
     
     // Subscribe to conversation updates
     const conversationChannel = supabase
@@ -98,7 +126,7 @@ export function ConversationHistory({
         
         if (type === 'conversation_started' || type === 'conversation_ended' || type === 'conversation_completed') {
           // Reload conversations to get updated data
-          loadConversations();
+          reloadConversations();
         }
       })
       .subscribe();
@@ -115,16 +143,41 @@ export function ConversationHistory({
         console.log('Database conversation change:', payload);
         
         // Reload conversations to get latest data
-        loadConversations();
+        reloadConversations();
       })
       .subscribe();
     
+    // Store references for cleanup
+    subscriptionsRef.current = {
+      conversationChannel,
+      tableChannel
+    };
+    
     return () => {
       console.log('Cleaning up real-time subscriptions');
-      conversationChannel.unsubscribe();
-      tableChannel.unsubscribe();
+      if (subscriptionsRef.current.conversationChannel) {
+        subscriptionsRef.current.conversationChannel.unsubscribe();
+      }
+      if (subscriptionsRef.current.tableChannel) {
+        subscriptionsRef.current.tableChannel.unsubscribe();
+      }
+      subscriptionsRef.current = {};
+      isSubscribedRef.current = false;
     };
-  }, [user?.id, loadConversations]);
+  }, [user?.id]); // ONLY depend on user?.id, not loadConversations
+  
+  // Cleanup subscriptions on unmount
+  useEffect(() => {
+    return () => {
+      if (subscriptionsRef.current.conversationChannel) {
+        subscriptionsRef.current.conversationChannel.unsubscribe();
+      }
+      if (subscriptionsRef.current.tableChannel) {
+        subscriptionsRef.current.tableChannel.unsubscribe();
+      }
+      isSubscribedRef.current = false;
+    };
+  }, []);
   
   // Handle search input with debounce
   const handleSearchChange = useCallback(
@@ -457,9 +510,7 @@ export function ConversationHistory({
               variant="outline"
               size="sm"
               className="mt-2"
-              onClick={() => {
-                // Reload conversations
-              }}
+              onClick={loadConversations}
             >
               Try Again
             </Button>
