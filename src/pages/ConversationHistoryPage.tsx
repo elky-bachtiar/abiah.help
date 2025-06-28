@@ -56,32 +56,25 @@ export function ConversationHistoryPage() {
   // Use real user ID if available, otherwise fallback to mock
   const userId = user?.id || 'user-1';
   
-  // Load conversations when component mounts
-  useEffect(() => {
-    const loadConversations = async () => {
-      if (!userId) return;
-      
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Use the real API if user is logged in
-        if (user) {
-          const userConversations = await getConversationsForUser(userId);
-          setConversations(userConversations);
-        } else {
-          // Otherwise use mock data (already loaded in the atom)
-          console.log('Using mock conversation data');
-        }
-      } catch (err) {
-        console.error('Error loading conversations:', err);
-        setError('Failed to load conversations. Please try again.');
-      } finally {
-        setIsLoading(false);
+  const loadConversations = useCallback(async () => {
+    if (!userId) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (user) {
+        const userConversations = await getConversationsForUser(userId);
+        setConversations(userConversations);
+      } else {
+        console.log('Using mock conversation data');
       }
-    };
-    
-    loadConversations();
+    } catch (err) {
+      console.error('Error loading conversations:', err);
+      setError('Failed to load conversations. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }, [userId, user, setConversations]);
   
   // Set up periodic refresh
