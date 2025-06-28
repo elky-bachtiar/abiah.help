@@ -201,7 +201,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                 
                 {!plan.isEnterprise && (
                   <p className="text-center text-xs text-muted-foreground mt-3">
-                    14-day free trial • No credit card required
+                    5-day free trial • No credit card required
                   </p>
                 )}
               </div>
