@@ -195,7 +195,6 @@ Deno.serve(async (req) => {
       },
     }
   : {}),
-
       success_url,
       cancel_url,
     });
