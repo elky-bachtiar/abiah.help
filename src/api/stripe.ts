@@ -69,3 +69,60 @@ export async function createCheckoutSession(
     throw error;
   }
 }
+
+
+/**
+ * Get the current user's subscription
+ * @returns The subscription data or null if not found
+ */
+export async function getUserSubscription() {
+  try {
+    const { data, error } = await supabase
+      .from('stripe_user_subscriptions')
+      .select('*')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching subscription:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in getUserSubscription:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the current user's order history
+ * @returns Array of order data
+ */
+export async function getUserOrders() {
+  try {
+    const { data, error } = await supabase
+      .from('stripe_user_orders')
+      .select('*')
+      .order('order_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching orders:', error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getUserOrders:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the product details for a price ID
+ * @param priceId The Stripe price ID
+ * @returns The product details or null if not found
+ */
+export function getProductByPriceId(priceId: string) {
+  const { products } = require('../stripe-config');
+  return products.find((product: any) => product.priceId === priceId) || null;
+}
