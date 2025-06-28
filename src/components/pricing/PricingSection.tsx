@@ -9,15 +9,6 @@ interface PricingSectionProps {
 
 export function PricingSection({ hideSupport = false }: PricingSectionProps) {
   const [isAnnual, setIsAnnual] = useState(false);
-
-  {
-    id: 'prod_SYZzwqHSFjVPjm', // Founder Companion
-    name: 'Founder Companion',
-    description: 'Your trusted AI mentor for critical decisions. 3 × 25-minute video sessions (75 minutes total).',
-    priceId: 'price_1RdSpQD5a0uk1qUEmESxoySs',
-    yearlyPriceId: 'price_1RdTV9D5a0uk1qUEhqJKCcU8',
-    mode: 'subscription'
-  },
   
   const plans = [
     {
