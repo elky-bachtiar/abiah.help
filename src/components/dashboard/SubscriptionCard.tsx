@@ -6,7 +6,6 @@ import { useStripe } from '../../context/StripeContext';
 import { Button } from '../ui/Button-bkp';
 import { Card, CardContent } from '../ui/Card';
 import { products } from '../../stripe-config';
-import { products } from '../../stripe-config';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function SubscriptionCard() {
