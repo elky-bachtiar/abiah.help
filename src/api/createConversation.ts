@@ -5,7 +5,6 @@ import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
 
-const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || 'false';
 const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.abiah.help';
 
 export interface ConversationCreationResult {
@@ -62,8 +61,6 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     contextString = `You are talking with the user, ${settings.name}. `;
   }
   contextString += settings.context || default_context;
-
-  console.log('VITE_ENABLE_LLM_TOOLS', VITE_ENABLE_LLM_TOOLS);
   
   // If a full payload override is provided in settings, use it
   const payload = settings.payload ?? {
@@ -89,8 +86,6 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
       recording_s3_bucket_name: 'conversation-recordings',
       recording_s3_bucket_region: 'us-east-1',
       aws_assume_role_arn: '',
-      // Enable LLM tools if configured
-      enable_llm_tools: VITE_ENABLE_LLM_TOOLS
     }
   };
 
