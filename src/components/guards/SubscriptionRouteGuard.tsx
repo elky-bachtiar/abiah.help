@@ -25,7 +25,6 @@ export function SubscriptionRouteGuard({
   const [isValidating, setIsValidating] = useState(true);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) {
