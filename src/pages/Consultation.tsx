@@ -31,7 +31,7 @@ export function Consultation() {
   const [currentView, setCurrentView] = React.useState<ViewState>('history');
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
   
-  // CRITICAL FIX: Memoize userId to prevent infinite re-renders
+  // STABLE userId - memoized to prevent unnecessary re-renders
   const userId = React.useMemo(() => user?.id || '', [user?.id]);
   
   // Get conversation completion status
@@ -41,7 +41,7 @@ export function Consultation() {
     completionTime,
     documentOpportunities,
     error: completionError 
-  } = useConversationCompletion(activeConversationId, user?.id);
+  } = useConversationCompletion(activeConversationId, userId);
   
   // Get document generation capabilities
   const { 
@@ -68,7 +68,7 @@ export function Consultation() {
     }
   }, [searchParams, setActiveConversationId]);
   
-  // MEMOIZED CALLBACKS - This is the key fix!
+  // STABLE CALLBACKS - properly memoized to prevent re-renders
   const handleStartNew = React.useCallback(() => {
     setActiveConversationId(null);
     setCurrentView('active-consultation');
@@ -109,7 +109,7 @@ export function Consultation() {
   
   // Subscribe to real-time updates
   React.useEffect(() => {
-    if (!activeConversationId || !user) return;
+    if (!activeConversationId || !userId) return;
     
     const unsubscribeDocuments = subscribeToGenerationUpdates(activeConversationId);
     const unsubscribeConversation = subscribeToConversationEvents(activeConversationId);
@@ -118,13 +118,24 @@ export function Consultation() {
       unsubscribeDocuments();
       unsubscribeConversation();
     };
-  }, [activeConversationId, user, subscribeToGenerationUpdates, subscribeToConversationEvents]);
+  }, [activeConversationId, userId, subscribeToGenerationUpdates, subscribeToConversationEvents]);
   
-  // Render based on current view
-  if (currentView === 'history') {
+  // Don't render anything if we don't have a user ID
+  if (!userId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary to-primary-800">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+  
+  // FIXED: Render all views and control visibility with CSS
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary to-primary-800">
+      <div className="container mx-auto px-4 py-8">
+        
+        {/* History View */}
+        <div className={`${currentView === 'history' ? 'block' : 'hidden'}`}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -197,7 +208,7 @@ export function Consultation() {
                   </Button>
                 </div>
                 
-                {/* THE KEY FIX: Pass memoized userId to prevent re-renders */}
+                {/* ConversationHistory renders once and stays mounted */}
                 <ConversationHistory
                   userId={userId}
                   onConversationSelect={handleContinueConversation}
@@ -208,14 +219,9 @@ export function Consultation() {
             </motion.div>
           </div>
         </div>
-      </div>
-    );
-  }
-  
-  if (currentView === 'transcript') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary to-primary-800">
-        <div className="container mx-auto px-4 py-8">
+        
+        {/* Transcript View */}
+        <div className={`${currentView === 'transcript' ? 'block' : 'hidden'}`}>
           {/* Navigation */}
           <div className="mb-6">
             <Button
@@ -238,47 +244,44 @@ export function Consultation() {
             />
           )}
         </div>
-      </div>
-    );
-  }
-  
-  // Active consultation view
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary to-primary-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Navigation */}
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            className="border-white text-white hover:bg-white/20"
-            onClick={handleBackToHistory}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to History
-          </Button>
+        
+        {/* Active Consultation View */}
+        <div className={`${currentView === 'active-consultation' ? 'block' : 'hidden'}`}>
+          {/* Navigation */}
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              className="border-white text-white hover:bg-white/20"
+              onClick={handleBackToHistory}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to History
+            </Button>
+          </div>
+          
+          {/* Conversation Status */}
+          <ConversationStatusBar 
+            isCompleted={isCompleted}
+            completionTime={completionTime}
+            hasTranscript={!!transcript}
+            onViewTranscript={handleViewTranscript}
+            error={completionError}
+          />
+          
+          {/* Consultation Container */}
+          <ConsultationContainer />
+          
+          {/* Post-conversation actions */}
+          {isCompleted && (
+            <PostConversationActions
+              transcript={transcript}
+              documentOpportunities={documentOpportunities}
+              onGenerateDocument={handleGenerateDocument}
+              onScheduleFollowUp={handleScheduleFollowUp}
+            />
+          )}
         </div>
         
-        {/* Conversation Status */}
-        <ConversationStatusBar 
-          isCompleted={isCompleted}
-          completionTime={completionTime}
-          hasTranscript={!!transcript}
-          onViewTranscript={handleViewTranscript}
-          error={completionError}
-        />
-        
-        {/* Consultation Container */}
-        <ConsultationContainer />
-        
-        {/* Post-conversation actions */}
-        {isCompleted && (
-          <PostConversationActions
-            transcript={transcript}
-            documentOpportunities={documentOpportunities}
-            onGenerateDocument={handleGenerateDocument}
-            onScheduleFollowUp={handleScheduleFollowUp}
-          />
-        )}
       </div>
     </div>
   );
