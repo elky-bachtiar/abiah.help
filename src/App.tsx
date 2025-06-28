@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAtom } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './hooks/useAuth';
 import { StripeProvider } from './context/StripeContext';
 import { isAuthenticatedAtom, authLoadingAtom } from './store/auth';
@@ -134,11 +135,13 @@ function AppContent() {
                 <Route 
                   path="/consultation" 
                   element={
-                    <ProtectedRoute>
-                      <SubscriptionRouteGuard actionType="conversation">
-                        <Consultation />
-                      </SubscriptionRouteGuard>
-                    </ProtectedRoute>
+                    <ErrorBoundary>
+                      <ProtectedRoute>
+                        <SubscriptionRouteGuard actionType="conversation">
+                          <Consultation />
+                        </SubscriptionRouteGuard>
+                      </ProtectedRoute>
+                    </ErrorBoundary>
                   } 
                 />
                 <Route 
@@ -189,9 +192,11 @@ function AppContent() {
                   path="/conversation-history" 
                   element={
                     <ProtectedRoute>
-                      <SubscriptionRouteGuard actionType="conversation">
-                        <ConversationHistoryPage />
-                      </SubscriptionRouteGuard>
+                      <ErrorBoundary>
+                        <SubscriptionRouteGuard actionType="conversation">
+                          <ConversationHistoryPage />
+                        </SubscriptionRouteGuard>
+                      </ErrorBoundary>
                     </ProtectedRoute>
                   } 
                 />

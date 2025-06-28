@@ -3,22 +3,10 @@ import { useAtom } from 'jotai';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  MessageSquare, 
-  Calendar, 
-  Search, 
-  Filter, 
-  ArrowUpDown,
-  ChevronDown, 
-  ChevronUp, 
-  Clock, 
-  Tag, 
-  CheckCircle, 
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Download,
-  Share2
+  MessageSquare, Calendar, Search, Filter, ArrowUpDown,
+  ChevronDown, ChevronUp, Clock, Tag, CheckCircle, 
+  ArrowRight, ChevronLeft, ChevronRight, Eye,
+  Download, Share2, AlertCircle
 } from 'lucide-react';
 import { 
   conversationHistoryAtom,
@@ -33,6 +21,7 @@ import { getConversationsForUser, getConversationDetails } from '../api/conversa
 import { userAtom } from '../store/auth';
 import { useSubscriptionCheck } from '../hooks/useSubscriptionCheck';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ContextIndicator } from '../components/conversation/ContextIndicator';
 
 const ITEMS_PER_PAGE = 10;
@@ -626,7 +615,8 @@ export function ConversationHistoryPage() {
   // Main conversation history view
   return (
     <div className="min-h-screen bg-background-secondary">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ErrorBoundary>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -871,6 +861,7 @@ export function ConversationHistoryPage() {
           </div>
         )}
       </div>
+      </ErrorBoundary>
     </div>
   );
 }

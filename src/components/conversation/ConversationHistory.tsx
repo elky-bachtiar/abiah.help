@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, Calendar, Clock, Tag, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, Calendar, Clock, Tag, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { 
   conversationHistoryAtom, 
   conversationFiltersAtom, 
@@ -39,7 +39,8 @@ export function ConversationHistory({
   compact = false,
   refreshTrigger = 0
 }: ConversationHistoryProps) {
-  const { user } = useAuth();
+  // Remove useAuth() to avoid potential re-renders from auth state changes
+  // const { user } = useAuth();
   
   // Global state
   const [conversations] = useAtom(paginatedConversationsAtom);
@@ -53,25 +54,34 @@ export function ConversationHistory({
   
   // Local state
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
   
   // Refs for tracking user ID and avoiding stale closures
   const userIdRef = useRef<string | undefined>(undefined);
   
   // Update user ID ref
   useEffect(() => {
-    userIdRef.current = user?.id;
-  }, [user?.id]);
+    userIdRef.current = userId;
+    console.log(`[ConversationHistory] userIdRef updated: ${userIdRef.current}`);
+  }, [userId]);
   
   // Load conversations from API - STABLE function
-  const loadConversations = useCallback(async (targetUserId?: string) => {
-    const actualUserId = targetUserId || user?.id;
-    if (!actualUserId) return;
+  const loadConversations = useCallback(async () => {
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) {
+      console.log('[ConversationHistory] loadConversations: No userId available');
+      return;
+    }
     
     try {
+      console.log(`[ConversationHistory] Loading conversations for user: ${currentUserId}`);
       setIsLoading(true);
       setError(null);
-      const fetchedConversations = await getConversationsForUser(actualUserId);
+      const fetchedConversations = await getConversationsForUser(currentUserId);
+      console.log(`[ConversationHistory] Loaded ${fetchedConversations.length} conversations`);
       setAllConversations(fetchedConversations);
+      setLastRefreshTime(new Date());
       
       // Update pagination info
       setPagination(prev => ({
@@ -85,24 +95,30 @@ export function ConversationHistory({
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, setAllConversations, setPagination, setIsLoading, setError]);
+  }, [setAllConversations, setPagination, setIsLoading, setError]);
   
   // Load conversations on mount and refresh trigger changes
   useEffect(() => {
-    if (user?.id) {
-      loadConversations(user.id);
+    console.log(`[ConversationHistory] Initial load/refresh trigger: ${refreshTrigger}`);
+    if (userId) {
+      loadConversations().catch(err => {
+        console.error('[ConversationHistory] Error in initial load:', err);
+      });
     }
-  }, [user?.id, refreshTrigger]); // REMOVED loadConversations from dependencies
+  }, [userId, refreshTrigger, loadConversations]);
   
   // Set up real-time subscriptions - STRICTMODE SAFE VERSION
   useEffect(() => {
-    if (!user?.id) return;
+    if (!userId) {
+      console.log('[ConversationHistory] Skipping subscription setup - no userId');
+      return;
+    }
     
     // Create a unique identifier for this effect instance
     const effectId = Date.now() + Math.random();
     let isEffectActive = true;
     
-    console.log(`🔄 [${effectId}] Setting up subscription for user:`, user.id);
+    console.log(`🔄 [${effectId}] Setting up subscription for user:`, userId);
     
     // Create a stable reload function
     const reloadConversations = async () => {
@@ -113,7 +129,8 @@ export function ConversationHistory({
       
       try {
         console.log(`📡 [${effectId}] Reloading conversations`);
-        const fetchedConversations = await getConversationsForUser(user.id);
+        const fetchedConversations = await getConversationsForUser(userId);
+        console.log(`📡 [${effectId}] Fetched ${fetchedConversations.length} conversations`);
         
         // Double-check if effect is still active before updating state
         if (isEffectActive) {
@@ -123,49 +140,66 @@ export function ConversationHistory({
             totalItems: fetchedConversations.length,
             totalPages: Math.ceil(fetchedConversations.length / prev.pageSize)
           }));
+          setLastRefreshTime(new Date());
+          setSubscriptionError(null);
         }
       } catch (err) {
         console.error(`❌ [${effectId}] Error reloading conversations:`, err);
+        if (isEffectActive) {
+          setSubscriptionError('Failed to update conversations in real-time');
+        }
       }
     };
     
     // Subscribe to conversation updates
     const conversationChannel = supabase
-      .channel(`user-conversations-${user.id}-${effectId}`)
+      .channel(`user-conversations-${userId}-${effectId}`)
       .on('broadcast', { event: 'conversation_update' }, (payload) => {
         if (!isEffectActive) return;
-        console.log(`📡 [${effectId}] Received conversation update:`, payload);
-        setTimeout(reloadConversations, 100); // Debounce
+        console.log(`📡 [${effectId}] Received conversation update event`);
+        // Debounce with a slightly longer delay to avoid rapid reloads
+        setTimeout(reloadConversations, 300);
       })
       .subscribe();
     
     // Subscribe to conversation table changes
     const tableChannel = supabase
-      .channel(`table-conversations-${user.id}-${effectId}`)
+      .channel(`table-conversations-${userId}-${effectId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'conversations',
-        filter: `user_id=eq.${user.id}`
+        filter: `user_id=eq.${userId}`
       }, (payload) => {
         if (!isEffectActive) return;
-        console.log(`📊 [${effectId}] Database conversation change:`, payload);
-        setTimeout(reloadConversations, 100); // Debounce
+        console.log(`📊 [${effectId}] Database conversation change detected`);
+        // Debounce with a slightly longer delay
+        setTimeout(reloadConversations, 300);
       })
       .subscribe();
     
+    console.log(`🔄 [${effectId}] Subscriptions established successfully`);
+    
     // Cleanup function
     return () => {
-      console.log(`🧹 [${effectId}] Cleaning up subscriptions`);
+      console.log(`🧹 [${effectId}] Cleaning up subscriptions for user: ${userId}`);
       isEffectActive = false;
       
       // Small delay to ensure any pending operations complete
       setTimeout(() => {
-        conversationChannel?.unsubscribe();
-        tableChannel?.unsubscribe();
+        try {
+          console.log(`🧹 [${effectId}] Unsubscribing from channels`);
+          conversationChannel?.unsubscribe();
+          tableChannel?.unsubscribe();
+          supabase.removeChannel(conversationChannel);
+          supabase.removeChannel(tableChannel);
+          console.log(`🧹 [${effectId}] Channels successfully removed`);
+        } catch (err) {
+          console.error(`🧹 [${effectId}] Error during cleanup:`, err);
+        }
       }, 50);
     };
-  }, [user?.id]); // ONLY user?.id dependency
+  }, [userId]); // ONLY userId dependency
   
   // Handle search input with debounce
   const handleSearchChange = useCallback(
@@ -338,7 +372,7 @@ export function ConversationHistory({
       {/* Debug info (remove in production) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-          <strong>Debug:</strong> User: {user?.id} | Loading: {String(isLoading)}
+          <strong>Debug:</strong> User: {userId} | Loading: {String(isLoading)}
         </div>
       )}
       
@@ -499,16 +533,31 @@ export function ConversationHistory({
       <div className="mb-6">
         {error ? (
           <div className="p-4 bg-error/10 border border-error/20 rounded-lg text-error text-center">
-            <p className="font-medium">Error loading conversations</p>
+            <div className="flex items-center justify-center mb-2">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <p className="font-medium">Error loading conversations</p>
+            </div>
             <p className="text-sm">{error}</p>
             <Button
               variant="outline"
               size="sm"
               className="mt-2"
-              onClick={() => loadConversations(user?.id)}
+              onClick={() => loadConversations().catch(console.error)}
             >
               Try Again
             </Button>
+          </div>
+        ) : subscriptionError ? (
+          <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg text-warning text-sm mb-4">
+            <div className="flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+              <p>{subscriptionError} - <button 
+                className="underline hover:text-warning/80" 
+                onClick={() => window.location.reload()}
+              >
+                Refresh page
+              </button></p>
+            </div>
           </div>
         ) : isLoading ? (
           renderSkeleton()
@@ -588,6 +637,13 @@ export function ConversationHistory({
               Next
             </Button>
           </div>
+        </div>
+      )}
+      
+      {/* Last refresh indicator */}
+      {!compact && !isLoading && conversations.length > 0 && (
+        <div className="text-xs text-white/50 text-right mt-2">
+          Last updated: {lastRefreshTime.toLocaleTimeString()}
         </div>
       )}
     </div>
