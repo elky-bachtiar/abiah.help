@@ -59,7 +59,6 @@ export async function createCheckoutSession(
       throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
-    const { sessionId, url } = await response.json();
     return { sessionId, url };
   } catch (error) {
     console.error('Error creating checkout session:', error);
