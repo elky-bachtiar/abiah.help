@@ -28,7 +28,7 @@ export const products: Product[] = [
     id: 'prod_SYErHkrTyiIAmi', // Growth Partner
     name: 'Growth Partner',
     description: 'Strategic AI mentorship for scaling startups. 5 × 30-minute video sessions (150 minutes total).',
-    priceId: 'price_1Rd8O4D5a0uk1qUEb76A0qe2',
+    priceId: 'price_1RdSqoD5a0uk1qUEmXVPIKtL',
     yearlyPriceId: 'price_1Rd8O4D5a0uk1qUEb76A0qe2',
     mode: 'subscription'
   },
