@@ -21,7 +21,7 @@ export const products: Product[] = [
     name: 'Founder Companion',
     description: 'Your trusted AI mentor for critical decisions. 3 × 25-minute video sessions (75 minutes total).',
     priceId: 'price_1RdSpQD5a0uk1qUEmESxoySs',
-    yearlyPriceId: 'price_1Rd8NmD5a0uk1qUEF5N4AXbq',
+    yearlyPriceId: 'price_1RdTV9D5a0uk1qUEhqJKCcU8',
     mode: 'subscription'
   },
   {
