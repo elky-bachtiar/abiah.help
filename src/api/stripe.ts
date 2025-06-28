@@ -31,8 +31,13 @@ export async function createCheckoutSession(
     };
 
     if (mode === 'subscription' && trialDays) {
-      body.trial_period_days = trialDays;
+      body.subscription_data = {
+        trial_settings: {
+          trial_period_days: trialDays,
+        },
+      };
     }
+
 
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
       method: 'POST',
