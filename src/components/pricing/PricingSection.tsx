@@ -9,10 +9,20 @@ interface PricingSectionProps {
 
 export function PricingSection({ hideSupport = false }: PricingSectionProps) {
   const [isAnnual, setIsAnnual] = useState(false);
+
+  {
+    id: 'prod_SYZzwqHSFjVPjm', // Founder Companion
+    name: 'Founder Companion',
+    description: 'Your trusted AI mentor for critical decisions. 3 × 25-minute video sessions (75 minutes total).',
+    priceId: 'price_1RdSpQD5a0uk1qUEmESxoySs',
+    yearlyPriceId: 'price_1RdTV9D5a0uk1qUEhqJKCcU8',
+    mode: 'subscription'
+  },
   
   const plans = [
     {
-      name: "Starter",
+      id: 'prod_SYErznlRJrJHln', // Founder Essential
+      name: "Founder Essential",
       price: isAnnual ? 79 : 99,
       originalPrice: isAnnual ? 99 : null,
       subtitle: "Perfect for getting started",
@@ -25,10 +35,11 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
       ],
       popular: false,
       gradient: "from-blue-500 to-blue-600",
-      priceId: isAnnual ? 'price_starter_yearly' : 'price_starter_monthly'
+      priceId: isAnnual ? 'price_1Rd8NVD5a0uk1qUEQSEg8jCp' : 'price_1RdT9CD5a0uk1qUEP1jnRYQi'
     },
     {
-      name: "Professional",
+      id: 'prod_SYZzwqHSFjVPjm', // Founder Companion
+      name: "Founder Companion",
       price: isAnnual ? 159 : 199,
       originalPrice: isAnnual ? 199 : null,
       subtitle: "Most popular for growing startups",
@@ -41,7 +52,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
       ],
       popular: true,
       gradient: "from-primary to-secondary",
-      priceId: isAnnual ? 'price_professional_yearly' : 'price_professional_monthly'
+      priceId: isAnnual ? 'price_1RdSpQD5a0uk1qUEmESxoySs' : 'price_1RdTV9D5a0uk1qUEhqJKCcU8'
     },
     {
       name: "Enterprise",
