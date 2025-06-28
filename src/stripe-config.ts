@@ -37,7 +37,7 @@ export const products: Product[] = [
     name: 'Expert Advisor',
     description: 'Your personal AI advisory board. 8 × 30-minute video sessions (240 minutes total).',
     priceId: 'price_1Rd8O4D5a0uk1qUEb76A0qe2',
-    yearlyPriceId: 'price_1Rd8OKD5a0uk1qUEXnVvuqO9',
+    yearlyPriceId: 'price_1RdTWYD5a0uk1qUEA1qK7jKs',
     mode: 'subscription'
   },
 ];
