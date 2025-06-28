@@ -27,24 +27,24 @@ export async function createCheckoutSession(
         'Authorization': `Bearer ${authData.session.access_token}`,
       },
       const body: any = {
-  price_id: priceId,
-  mode,
-  success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-  cancel_url: `${window.location.origin}/pricing`,
-};
-
-if (mode === 'subscription' && trialDays) {
-  body.trial_period_days = trialDays;
-}
-
-const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${authData.session.access_token}`,
-  },
-  body: JSON.stringify(body),
-});
+        price_id: priceId,
+        mode,
+        success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${window.location.origin}/pricing`,
+      };
+      
+      if (mode === 'subscription' && trialDays) {
+        body.trial_period_days = trialDays;
+      }
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authData.session.access_token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
     });
 
