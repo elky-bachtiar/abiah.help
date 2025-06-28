@@ -5,6 +5,8 @@ import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
 
+const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || false;
+
 export interface ConversationCreationResult {
   conversation?: IConversation;
   validation: ValidationResponse;
@@ -85,7 +87,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
       recording_s3_bucket_region: 'us-east-1',
       aws_assume_role_arn: '',
       // Enable LLM tools if configured
-      enable_llm_tools: import.meta.env.VITE_ENABLE_LLM_TOOLS === 'true'
+      enable_llm_tools: VITE_ENABLE_LLM_TOOLS
     }
   };
 
