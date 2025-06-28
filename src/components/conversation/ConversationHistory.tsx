@@ -30,6 +30,87 @@ interface ConversationHistoryProps {
   refreshTrigger?: number;
 }
 
+// Global subscription manager to prevent multiple subscriptions
+class SubscriptionManager {
+  private static instance: SubscriptionManager;
+  private activeSubscriptions = new Map<string, {
+    conversationChannel: any;
+    tableChannel: any;
+    refCount: number;
+  }>();
+
+  static getInstance(): SubscriptionManager {
+    if (!SubscriptionManager.instance) {
+      SubscriptionManager.instance = new SubscriptionManager();
+    }
+    return SubscriptionManager.instance;
+  }
+
+  subscribe(userId: string, onUpdate: () => void): () => void {
+    const existing = this.activeSubscriptions.get(userId);
+    
+    if (existing) {
+      // Subscription already exists, just increment ref count
+      existing.refCount++;
+      console.log(`📈 Incremented subscription ref count for user ${userId}: ${existing.refCount}`);
+      return () => this.unsubscribe(userId);
+    }
+
+    console.log(`🔄 Creating new subscription for user: ${userId}`);
+
+    // Create new subscription
+    const conversationChannel = supabase
+      .channel(`user-conversations-${userId}`)
+      .on('broadcast', { event: 'conversation_update' }, (payload) => {
+        console.log('📡 Received conversation update:', payload);
+        onUpdate();
+      })
+      .subscribe();
+
+    const tableChannel = supabase
+      .channel(`table-conversations-${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversations',
+        filter: `user_id=eq.${userId}`
+      }, (payload) => {
+        console.log('📊 Database conversation change:', payload);
+        onUpdate();
+      })
+      .subscribe();
+
+    this.activeSubscriptions.set(userId, {
+      conversationChannel,
+      tableChannel,
+      refCount: 1
+    });
+
+    // Return unsubscribe function
+    return () => this.unsubscribe(userId);
+  }
+
+  private unsubscribe(userId: string): void {
+    const existing = this.activeSubscriptions.get(userId);
+    if (!existing) return;
+
+    existing.refCount--;
+    console.log(`📉 Decremented subscription ref count for user ${userId}: ${existing.refCount}`);
+
+    if (existing.refCount <= 0) {
+      console.log(`🧹 Cleaning up subscription for user: ${userId}`);
+      existing.conversationChannel?.unsubscribe();
+      existing.tableChannel?.unsubscribe();
+      this.activeSubscriptions.delete(userId);
+    }
+  }
+
+  // For debugging
+  getActiveSubscriptions(): string[] {
+    return Array.from(this.activeSubscriptions.keys());
+  }
+}
+
 export function ConversationHistory({
   userId,
   onConversationSelect,
@@ -52,12 +133,9 @@ export function ConversationHistory({
   // Local state
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   
-  // Refs to prevent multiple subscriptions
-  const subscriptionsRef = useRef<{
-    conversationChannel?: any;
-    tableChannel?: any;
-  }>({});
-  const isSubscribedRef = useRef(false);
+  // Refs for cleanup
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const subscriptionManager = SubscriptionManager.getInstance();
   
   // Load conversations from API
   const loadConversations = useCallback(async () => {
@@ -88,94 +166,37 @@ export function ConversationHistory({
     loadConversations();
   }, [loadConversations, refreshTrigger]);
   
-  // Set up real-time subscriptions for conversation updates
+  // Set up real-time subscriptions using the singleton manager
   useEffect(() => {
-    if (!user?.id || isSubscribedRef.current) return;
+    if (!user?.id) return;
     
-    console.log('Setting up real-time subscription for user:', user.id);
-    isSubscribedRef.current = true;
+    console.log(`🎯 Setting up subscription effect for user: ${user.id}`);
     
-    // Create a stable reference to loadConversations for the subscription callbacks
-    const reloadConversations = () => {
-      // Use the current user ID to avoid stale closures
-      if (user?.id) {
-        getConversationsForUser(user.id)
-          .then(fetchedConversations => {
-            setAllConversations(fetchedConversations);
-            setPagination(prev => ({
-              ...prev,
-              totalItems: fetchedConversations.length,
-              totalPages: Math.ceil(fetchedConversations.length / prev.pageSize)
-            }));
-          })
-          .catch(err => {
-            console.error('Error reloading conversations:', err);
-            setError(err instanceof Error ? err.message : 'Failed to reload conversations');
-          });
-      }
-    };
+    // Subscribe using the singleton manager
+    const unsubscribe = subscriptionManager.subscribe(user.id, () => {
+      // Use a slight delay to batch rapid updates
+      setTimeout(loadConversations, 100);
+    });
     
-    // Subscribe to conversation updates
-    const conversationChannel = supabase
-      .channel(`user-${user.id}`)
-      .on('broadcast', { event: 'conversation_update' }, (payload) => {
-        console.log('Received conversation update:', payload);
-        
-        // Handle different types of updates
-        const { type, conversationId, status } = payload.payload;
-        
-        if (type === 'conversation_started' || type === 'conversation_ended' || type === 'conversation_completed') {
-          // Reload conversations to get updated data
-          reloadConversations();
-        }
-      })
-      .subscribe();
+    unsubscribeRef.current = unsubscribe;
     
-    // Subscribe to conversation table changes
-    const tableChannel = supabase
-      .channel('conversations-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'conversations',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        console.log('Database conversation change:', payload);
-        
-        // Reload conversations to get latest data
-        reloadConversations();
-      })
-      .subscribe();
-    
-    // Store references for cleanup
-    subscriptionsRef.current = {
-      conversationChannel,
-      tableChannel
-    };
-    
+    // Cleanup function
     return () => {
-      console.log('Cleaning up real-time subscriptions');
-      if (subscriptionsRef.current.conversationChannel) {
-        subscriptionsRef.current.conversationChannel.unsubscribe();
+      console.log(`🎯 Cleaning up subscription effect for user: ${user.id}`);
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
       }
-      if (subscriptionsRef.current.tableChannel) {
-        subscriptionsRef.current.tableChannel.unsubscribe();
-      }
-      subscriptionsRef.current = {};
-      isSubscribedRef.current = false;
     };
-  }, [user?.id]); // ONLY depend on user?.id, not loadConversations
+  }, [user?.id]); // Only depend on user ID
   
-  // Cleanup subscriptions on unmount
+  // Final cleanup on unmount
   useEffect(() => {
     return () => {
-      if (subscriptionsRef.current.conversationChannel) {
-        subscriptionsRef.current.conversationChannel.unsubscribe();
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
       }
-      if (subscriptionsRef.current.tableChannel) {
-        subscriptionsRef.current.tableChannel.unsubscribe();
-      }
-      isSubscribedRef.current = false;
     };
   }, []);
   
@@ -347,6 +368,14 @@ export function ConversationHistory({
   
   return (
     <div className="conversation-history">
+      {/* Debug info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+          <strong>Debug:</strong> Active subscriptions: {subscriptionManager.getActiveSubscriptions().join(', ')} | 
+          User: {user?.id} | Loading: {String(isLoading)}
+        </div>
+      )}
+      
       {/* Search and Filters */}
       {showFilters && (
         <div className="mb-6">
