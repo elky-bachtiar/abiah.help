@@ -26,13 +26,26 @@ export async function createCheckoutSession(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authData.session.access_token}`,
       },
-      body: JSON.stringify({
-        price_id: priceId,
-        mode,
-        trial_period_days: trialDays,
-        success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${window.location.origin}/pricing`,
-      }),
+      const body: any = {
+  price_id: priceId,
+  mode,
+  success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+  cancel_url: `${window.location.origin}/pricing`,
+};
+
+if (mode === 'subscription' && trialDays) {
+  body.trial_period_days = trialDays;
+}
+
+const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${authData.session.access_token}`,
+  },
+  body: JSON.stringify(body),
+});
+
     });
 
     if (!response.ok) {
