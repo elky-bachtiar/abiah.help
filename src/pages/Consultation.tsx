@@ -31,6 +31,9 @@ export function Consultation() {
   const [currentView, setCurrentView] = React.useState<ViewState>('history');
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
   
+  // CRITICAL FIX: Memoize userId to prevent infinite re-renders
+  const userId = React.useMemo(() => user?.id || '', [user?.id]);
+  
   // Get conversation completion status
   const { 
     isCompleted, 
@@ -194,9 +197,9 @@ export function Consultation() {
                   </Button>
                 </div>
                 
-                {/* THE KEY FIX: Pass memoized callback and userId properly */}
+                {/* THE KEY FIX: Pass memoized userId to prevent re-renders */}
                 <ConversationHistory
-                  userId={user?.id || ''}
+                  userId={userId}
                   onConversationSelect={handleContinueConversation}
                   showFilters={true}
                   refreshTrigger={refreshTrigger}
