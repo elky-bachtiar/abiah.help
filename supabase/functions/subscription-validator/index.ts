@@ -223,6 +223,17 @@ serve(async (req) => {
         .single()
 
       if (createError) {
+        throw createError
+      }
+      currentUsage = newUsage
+    } else {
+      currentUsage = usageTracking
+    }
+
+    return new Response(
+      JSON.stringify(await validateAction(validationRequest, currentUsage, limits, supabaseClient)),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
     console.error('Subscription validation error:', error)
