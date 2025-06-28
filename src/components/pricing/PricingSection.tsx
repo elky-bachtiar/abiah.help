@@ -224,7 +224,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => window.location.href = 'mailto:support@abiah.help'}
+              onClick={() => window.location.href = 'mailto:help@abiah.help'}
             >
               Contact Support
             </Button>
