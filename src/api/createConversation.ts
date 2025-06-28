@@ -119,7 +119,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   
   // Add tools configuration header if enabled
   const customHeaders: Record<string, string> = {};
-  if (import.meta.env.VITE_ENABLE_LLM_TOOLS === 'true') {
+  if (VITE_ENABLE_LLM_TOOLS === 'true') {
     customHeaders['x-tavus-enable-tools'] = 'true';
   }
   
