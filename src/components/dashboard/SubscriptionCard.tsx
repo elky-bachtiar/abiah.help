@@ -2,9 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, Calendar, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useStripe } from '../../context/StripeContext';
+import { useStripe } from '../../context/StripeContext'; 
 import { Button } from '../ui/Button-bkp';
 import { Card, CardContent } from '../ui/Card';
+import { products } from '../../stripe-config';
 import { products } from '../../stripe-config';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
@@ -12,7 +13,7 @@ export function SubscriptionCard() {
   const { subscription, isLoading, error } = useStripe();
 
   // Find the product based on the price ID
-  const product = subscription?.price_id 
+  const product = subscription?.price_id
     ? products.find(p => p.priceId === subscription.price_id) 
     : null;
 

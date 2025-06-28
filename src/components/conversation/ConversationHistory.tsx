@@ -5,7 +5,7 @@ import { Search, Filter, SlidersHorizontal, Calendar, Clock, Tag, ChevronDown, C
 import { 
   conversationHistoryAtom, 
   conversationFiltersAtom, 
-  conversationSearchAtom,
+  conversationSearchAtom, 
   paginatedConversationsAtom,
   paginationAtom,
   conversationSortAtom,
@@ -16,8 +16,8 @@ import {
 import { getConversationsForUser } from '../../api/conversationApi';
 import { ConversationSummary, ConversationFilters } from '../../types/Conversation';
 import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button-bkp';
-import { Input } from '../../components/ui/Input-bkp';
+import { Button } from '../../components/ui/Button-bkp'; 
+import { Input } from '../../components/ui/Input-bkp'; 
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
@@ -27,13 +27,15 @@ interface ConversationHistoryProps {
   onConversationSelect?: (conversation: ConversationSummary) => void;
   showFilters?: boolean;
   compact?: boolean;
+  refreshTrigger?: number;
 }
 
 export function ConversationHistory({
   userId,
   onConversationSelect,
   showFilters = true,
-  compact = false
+  compact = false,
+  refreshTrigger = 0
 }: ConversationHistoryProps) {
   const { user } = useAuth();
   
@@ -77,7 +79,7 @@ export function ConversationHistory({
   // Load conversations on mount and user change
   useEffect(() => {
     loadConversations();
-  }, [loadConversations]);
+  }, [loadConversations, refreshTrigger]);
   
   // Set up real-time subscriptions for conversation updates
   useEffect(() => {
