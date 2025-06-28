@@ -6,6 +6,7 @@ import { createConversationRecord, updateConversationWithTavusId } from "./conve
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
 
 const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || 'false';
+const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.abiah.help';
 
 export interface ConversationCreationResult {
   conversation?: IConversation;
@@ -70,7 +71,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     ...(settings.replica ? { replica_id: settings.replica } : {}),
     persona_id: settings.persona || "pebc953c8b73",
     // Add webhook URL for conversation completion
-    callback_url: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tavus-webhook`,
+    callback_url: `${VITE_SUPABASE_URL}/functions/v1/tavus-webhook`,
     conversation_name: title || `Conversation on ${new Date().toLocaleDateString()}`,
     conversational_context: contextString,
     custom_greeting: settings.greeting !== undefined && settings.greeting !== null 
