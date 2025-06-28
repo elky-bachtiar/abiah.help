@@ -5,7 +5,7 @@ import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
 
-const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || false;
+const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || 'false';
 
 export interface ConversationCreationResult {
   conversation?: IConversation;
