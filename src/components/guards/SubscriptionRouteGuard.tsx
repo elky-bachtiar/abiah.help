@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAtom } from 'jotai';
-import { userAtom } from '../../store/auth';
+//import { userAtom } from '../../store/auth';
 import { canStartConversation } from '../../api/subscriptionValidator';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { SubscriptionGuard } from '../subscription/SubscriptionGuard';
