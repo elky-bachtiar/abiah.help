@@ -5,6 +5,7 @@ import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
 
+const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || 'false';
 const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.abiah.help';
 
 export interface ConversationCreationResult {
@@ -61,6 +62,8 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     contextString = `You are talking with the user, ${settings.name}. `;
   }
   contextString += settings.context || default_context;
+
+  console.log('VITE_ENABLE_LLM_TOOLS', VITE_ENABLE_LLM_TOOLS);
   
   // If a full payload override is provided in settings, use it
   const payload = settings.payload ?? {
@@ -73,7 +76,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     conversational_context: contextString,
     custom_greeting: settings.greeting !== undefined && settings.greeting !== null 
       ? settings.greeting 
-      : "Hey there! I'm your technical co-pilot! Let's get get started building with Tavus.",
+      : "Hey I'm Abiah! Your personal mentor.",
     properties: {
       // These will be undefined unless injected via settings.payload
       max_call_duration: 180,
