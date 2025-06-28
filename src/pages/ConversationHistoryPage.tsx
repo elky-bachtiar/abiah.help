@@ -26,6 +26,9 @@ import { getConversationsForUser, getConversationDetails } from '../api/conversa
 import { userAtom } from '../store/auth';
 import { useSubscriptionCheck } from '../hooks/useSubscriptionCheck';
 
+// Refresh interval in milliseconds
+const REFRESH_INTERVAL = 10000; // 10 seconds
+
 export function ConversationHistoryPage() {
   // Global state
   const [conversations, setConversations] = useAtom(conversationHistoryAtom);
@@ -46,6 +49,9 @@ export function ConversationHistoryPage() {
   const [activeTab, setActiveTab] = useState<'history' | 'insights' | 'progress' | 'timeline'>('history');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Add refresh timer
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   
   // Use real user ID if available, otherwise fallback to mock
   const userId = user?.id || 'user-1';
@@ -77,6 +83,17 @@ export function ConversationHistoryPage() {
     
     loadConversations();
   }, [userId, user, setConversations]);
+  
+  // Set up periodic refresh
+  useEffect(() => {
+    const refreshTimer = setInterval(() => {
+      console.log('Refreshing conversation history...');
+      loadConversations();
+      setLastRefresh(new Date());
+    }, REFRESH_INTERVAL);
+    
+    return () => clearInterval(refreshTimer);
+  }, [loadConversations]);
   
   // Load conversation detail when selected
   useEffect(() => {
@@ -457,8 +474,20 @@ export function ConversationHistoryPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
             Conversation History
           </h1>
-          <p className="text-text-secondary text-lg">
+          <p className="text-text-secondary text-lg mb-2">
             Review your mentorship journey, track progress, and discover insights
+          </p>
+          <p className="text-xs text-text-secondary">
+            Last updated: {lastRefresh.toLocaleTimeString()}
+            <button 
+              onClick={() => {
+                loadConversations();
+                setLastRefresh(new Date());
+              }}
+              className="ml-2 text-primary hover:text-primary/80 underline"
+            >
+              Refresh now
+            </button>
           </p>
         </motion.div>
         

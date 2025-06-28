@@ -13,6 +13,7 @@ import { endConversation } from '../../api/endConversation';
 import { appendMessageToHistory } from '../../api/conversationApi';
 import { userAtom } from '../../store/auth';
 import { Button } from '../ui/Button-bkp';
+import { supabase } from '../../lib/supabase';
 import { VideoControls } from './VideoControls';
 import { SessionTimer } from './SessionTimer';
 
@@ -41,6 +42,7 @@ export function ActiveConsultation() {
   const [tavusConversationId, setTavusConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isInitializedRef = useRef(false);
+  const endingConversationRef = useRef(false);
 
   // Daily hooks
   const daily = useDaily();
@@ -144,18 +146,63 @@ export function ActiveConsultation() {
   }, [daily, localAudio, setVideoControls]);
 
   const handleEndConsultation = useCallback(() => {
+    // Prevent multiple end calls
+    if (endingConversationRef.current) {
+      console.log('Already ending conversation, ignoring duplicate request');
+      return;
+    }
+    
+    endingConversationRef.current = true;
+    console.log('Ending consultation with Tavus ID:', tavusConversationId, 'Local ID:', activeConversationId);
+    
     // End the Tavus conversation
     if (tavusConversationId) {
       endConversation('', tavusConversationId, activeConversationId || undefined)
-        .catch(error => console.error('Error ending conversation:', error));
+        .then(() => {
+          console.log('Successfully ended conversation');
+          // Navigate to summary screen
+          setCurrentScreen('summary');
+        })
+        .catch(error => {
+          console.error('Error ending conversation:', error);
+          // Still navigate to summary screen even if there's an error
+          setCurrentScreen('summary');
+        })
+        .finally(() => {
+          endingConversationRef.current = false;
+        });
+    } else {
+      console.warn('No Tavus conversation ID available, cannot end conversation properly');
+      setCurrentScreen('summary');
+      endingConversationRef.current = false;
     }
     
     // Leave the Daily call
     daily?.leave();
-    
-    // Navigate to summary screen
-    setCurrentScreen('summary');
   }, [daily, setCurrentScreen, tavusConversationId, activeConversationId]);
+  
+  // Set up event listener for beforeunload to end conversation when page is closed
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (tavusConversationId && !endingConversationRef.current) {
+        // Try to end the conversation
+        endingConversationRef.current = true;
+        endConversation('', tavusConversationId, activeConversationId || undefined)
+          .catch(error => console.error('Error ending conversation on page unload:', error));
+      }
+      
+      // Standard beforeunload handling
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [tavusConversationId, activeConversationId]);
 
   if (isLoading) {
     return (
@@ -175,7 +222,7 @@ export function ActiveConsultation() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Render local video */}
         {localSessionId && (
-          <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+          <div className="relative aspect-video bg-black rounded-lg overflow-hidden shadow-lg border-2 border-white/20">
             <video
               autoPlay
               muted
@@ -194,7 +241,7 @@ export function ActiveConsultation() {
         )}
         {/* Render remote videos */}
         {remoteVideos.map(({ pid, videoTrack }) => (
-          <div key={pid} className="relative aspect-video bg-black rounded-lg overflow-hidden">
+          <div key={pid} className="relative aspect-video bg-black rounded-lg overflow-hidden shadow-lg border-2 border-white/20">
             <video
               autoPlay
               playsInline
@@ -213,23 +260,44 @@ export function ActiveConsultation() {
         
         {/* Audio elements for remote participants */}
         {remoteAudios.map(({ pid, audioTrack }) => (
-          <audio
-            key={`audio-${pid}`}
-            autoPlay
-            playsInline
-            ref={audioEl => {
-              if (audioEl && audioTrack?.track) {
-                // Create a new MediaStream with just the audio track
-                const stream = new MediaStream([audioTrack.track]);
-                // Set the stream as the source for the audio element
-                audioEl.srcObject = stream;
-                // Attempt to play the audio
-                audioEl.play().catch(err => {
-                  console.error('Error playing remote audio:', err);
-                });
-              }
-            }}
-          />
+          <React.Fragment key={`audio-${pid}`}>
+            <audio
+              autoPlay
+              playsInline
+              controls={false}
+              ref={audioEl => {
+                if (audioEl && audioTrack?.track) {
+                  // Create a new MediaStream with just the audio track
+                  const stream = new MediaStream([audioTrack.track]);
+                  // Set the stream as the source for the audio element
+                  audioEl.srcObject = stream;
+                  // Set volume to maximum
+                  audioEl.volume = 1.0;
+                  // Log audio track info for debugging
+                  console.log(`Setting up audio for participant ${pid}:`, {
+                    hasTrack: !!audioTrack?.track,
+                    trackEnabled: audioTrack?.track?.enabled,
+                    trackMuted: audioTrack?.track?.muted,
+                    trackId: audioTrack?.track?.id
+                  });
+                  // Attempt to play the audio
+                  audioEl.play().catch(err => {
+                    console.error('Error playing remote audio:', err);
+                  });
+                } else {
+                  console.warn(`No audio track available for participant ${pid}`);
+                }
+              }}
+            />
+            {/* Debug info */}
+            <div className="hidden">
+              Audio track for {pid}: {audioTrack?.track ? 'Available' : 'Not available'}
+              {audioTrack?.track && (
+                <span> (Enabled: {audioTrack.track.enabled ? 'Yes' : 'No'}, 
+                        Muted: {audioTrack.track.muted ? 'Yes' : 'No'})</span>
+              )}
+            </div>
+          </React.Fragment>
         ))}
       </div>
       <VideoControls
@@ -243,20 +311,32 @@ export function ActiveConsultation() {
 
 // Custom hook to get remote audio tracks
 function useRemoteAudioTracks(remoteParticipantIds: string[], maxParticipants = 8) {
-  // Always call the same number of hooks, up to maxParticipants
-  const tracks = [];
-  for (let i = 0; i < maxParticipants; i++) {
-    const pid = remoteParticipantIds[i];
-    tracks.push({
-      pid,
-      audioTrack: useAudioTrack(pid),
-    });
-  }
+  const [tracks, setTracks] = useState<Array<{pid: string, audioTrack: any}>>([]);
   
-  // Log audio tracks for debugging
+  // Use effect to update tracks when participants change
   useEffect(() => {
-    console.log('Remote audio tracks:', tracks.filter(t => t.pid && t.audioTrack));
-  }, [tracks]);
+    const newTracks = [];
+    for (let i = 0; i < Math.min(remoteParticipantIds.length, maxParticipants); i++) {
+      const pid = remoteParticipantIds[i];
+      const audioTrack = useAudioTrack(pid);
+      newTracks.push({
+        pid,
+        audioTrack,
+      });
+    }
+    
+    setTracks(newTracks.filter(t => t.pid));
+    
+    // Log audio tracks for debugging
+    console.log('Remote audio tracks updated:', 
+      newTracks.filter(t => t.pid).map(t => ({
+        pid: t.pid,
+        hasTrack: !!t.audioTrack?.track,
+        isEnabled: t.audioTrack?.track?.enabled,
+        isMuted: t.audioTrack?.track?.muted
+      }))
+    );
+  }, [remoteParticipantIds]);
   
-  return tracks.filter(t => t.pid); // Only return those with a participant
+  return tracks;
 }
