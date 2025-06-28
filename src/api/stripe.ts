@@ -64,6 +64,7 @@ export async function createCheckoutSession(
         window.location.href = url;
       } else {
         const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
+        console.log('stripe', stripe);
         if (!stripe) throw new Error('Failed to load Stripe.js');
         await stripe.redirectToCheckout({ sessionId });
       }
