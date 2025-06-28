@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-
+ 
 /**
  * Create a Stripe checkout session
  * @param priceId The Stripe price ID
@@ -45,6 +45,7 @@ export async function createCheckoutSession(
     }
 
     const { sessionId, url } = responseData;
+    console.log('Created session:', sessionId);
 
     return { sessionId, url };
   } catch (error) {
