@@ -13,7 +13,7 @@ export const products: Product[] = [
     name: 'Founder Essential',
     description: 'Perfect for getting started with AI mentorship. 2 × 20-minute video sessions (40 minutes total).',
     priceId: 'price_1Rd8NVD5a0uk1qUEQSEg8jCp',
-    yearlyPriceId: 'price_1Rd8NVD5a0uk1qUEQSEg8jCp',
+    yearlyPriceId: 'price_1RdT9CD5a0uk1qUEP1jnRYQi',
     mode: 'subscription'
   },
   {
