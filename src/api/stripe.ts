@@ -58,6 +58,7 @@ export async function createCheckoutSession(
     console.log('Created Stripe session:', sessionId);
 
     if (autoRedirect) {
+      console.log('STRIPE_PUBLISHABLE_KEY', STRIPE_PUBLISHABLE_KEY);
       if (!STRIPE_PUBLISHABLE_KEY) {
         console.warn('Stripe publishable key is not set. Falling back to direct redirect.');
         window.location.href = url;
