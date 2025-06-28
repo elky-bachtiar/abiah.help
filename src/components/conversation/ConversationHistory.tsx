@@ -30,104 +30,7 @@ interface ConversationHistoryProps {
   refreshTrigger?: number;
 }
 
-// Global subscription manager - handles ALL subscription logic
-class GlobalSubscriptionManager {
-  private static instance: GlobalSubscriptionManager;
-  private subscriptions = new Map<string, {
-    channels: Array<any>;
-    callbacks: Set<() => void>;
-    refCount: number;
-  }>();
-
-  static getInstance(): GlobalSubscriptionManager {
-    if (!GlobalSubscriptionManager.instance) {
-      GlobalSubscriptionManager.instance = new GlobalSubscriptionManager();
-    }
-    return GlobalSubscriptionManager.instance;
-  }
-
-  subscribe(userId: string, callback: () => void): () => void {
-    const existing = this.subscriptions.get(userId);
-    
-    if (existing) {
-      // Add callback to existing subscription
-      existing.callbacks.add(callback);
-      existing.refCount++;
-      console.log(`📈 Added callback to existing subscription for user ${userId} (refs: ${existing.refCount})`);
-      
-      return () => this.unsubscribe(userId, callback);
-    }
-
-    // Create new subscription
-    console.log(`🆕 Creating new subscription for user: ${userId}`);
-    
-    const callbacks = new Set([callback]);
-    const notifyCallbacks = () => {
-      callbacks.forEach(cb => {
-        try {
-          cb();
-        } catch (error) {
-          console.error('Error in subscription callback:', error);
-        }
-      });
-    };
-
-    // Create channels
-    const conversationChannel = supabase
-      .channel(`global-user-${userId}`)
-      .on('broadcast', { event: 'conversation_update' }, (payload) => {
-        console.log('📡 Broadcast update:', payload);
-        notifyCallbacks();
-      })
-      .subscribe();
-
-    const tableChannel = supabase
-      .channel(`global-table-${userId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'conversations',
-        filter: `user_id=eq.${userId}`
-      }, (payload) => {
-        console.log('📊 Table change:', payload);
-        notifyCallbacks();
-      })
-      .subscribe();
-
-    this.subscriptions.set(userId, {
-      channels: [conversationChannel, tableChannel],
-      callbacks,
-      refCount: 1
-    });
-
-    return () => this.unsubscribe(userId, callback);
-  }
-
-  private unsubscribe(userId: string, callback: () => void): void {
-    const existing = this.subscriptions.get(userId);
-    if (!existing) return;
-
-    existing.callbacks.delete(callback);
-    existing.refCount--;
-    
-    console.log(`📉 Removed callback for user ${userId} (refs: ${existing.refCount})`);
-
-    if (existing.refCount <= 0) {
-      console.log(`🧹 Cleaning up all subscriptions for user: ${userId}`);
-      existing.channels.forEach(channel => channel?.unsubscribe());
-      this.subscriptions.delete(userId);
-    }
-  }
-
-  // Debug method
-  getActiveSubscriptions(): Array<{ userId: string; refCount: number; callbackCount: number }> {
-    return Array.from(this.subscriptions.entries()).map(([userId, sub]) => ({
-      userId,
-      refCount: sub.refCount,
-      callbackCount: sub.callbacks.size
-    }));
-  }
-}
+// No need for complex GlobalSubscriptionManager - using simpler StrictMode-safe approach
 
 export function ConversationHistory({
   userId,
@@ -151,18 +54,23 @@ export function ConversationHistory({
   // Local state
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   
-  // Get singleton manager
-  const subscriptionManager = GlobalSubscriptionManager.getInstance();
-  const unsubscribeRef = useRef<(() => void) | null>(null);
+  // Refs for tracking user ID and avoiding stale closures
+  const userIdRef = useRef<string | undefined>(undefined);
   
-  // Load conversations from API
-  const loadConversations = useCallback(async () => {
-    if (!user?.id) return;
+  // Update user ID ref
+  useEffect(() => {
+    userIdRef.current = user?.id;
+  }, [user?.id]);
+  
+  // Load conversations from API - STABLE function
+  const loadConversations = useCallback(async (targetUserId?: string) => {
+    const actualUserId = targetUserId || user?.id;
+    if (!actualUserId) return;
     
     try {
       setIsLoading(true);
       setError(null);
-      const fetchedConversations = await getConversationsForUser(user.id);
+      const fetchedConversations = await getConversationsForUser(actualUserId);
       setAllConversations(fetchedConversations);
       
       // Update pagination info
@@ -179,61 +87,85 @@ export function ConversationHistory({
     }
   }, [user?.id, setAllConversations, setPagination, setIsLoading, setError]);
   
-  // Load conversations on mount and user change
+  // Load conversations on mount and refresh trigger changes
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations, refreshTrigger]);
+    if (user?.id) {
+      loadConversations(user.id);
+    }
+  }, [user?.id, refreshTrigger]); // REMOVED loadConversations from dependencies
   
-  // Set up subscription using the global manager
+  // Set up real-time subscriptions - STRICTMODE SAFE VERSION
   useEffect(() => {
     if (!user?.id) return;
     
-    console.log(`🎯 Setting up subscription for user: ${user.id}`);
+    // Create a unique identifier for this effect instance
+    const effectId = Date.now() + Math.random();
+    let isEffectActive = true;
     
-    // Create a stable callback for this component instance
-    const handleUpdate = () => {
-      console.log('📡 Reloading conversations due to real-time update');
-      // Use setTimeout to debounce rapid updates
-      setTimeout(() => {
-        if (user?.id) {
-          getConversationsForUser(user.id)
-            .then(fetchedConversations => {
-              setAllConversations(fetchedConversations);
-              setPagination(prev => ({
-                ...prev,
-                totalItems: fetchedConversations.length,
-                totalPages: Math.ceil(fetchedConversations.length / prev.pageSize)
-              }));
-            })
-            .catch(err => {
-              console.error('Error reloading conversations:', err);
-            });
+    console.log(`🔄 [${effectId}] Setting up subscription for user:`, user.id);
+    
+    // Create a stable reload function
+    const reloadConversations = async () => {
+      if (!isEffectActive) {
+        console.log(`🔄 [${effectId}] Effect no longer active, skipping reload`);
+        return;
+      }
+      
+      try {
+        console.log(`📡 [${effectId}] Reloading conversations`);
+        const fetchedConversations = await getConversationsForUser(user.id);
+        
+        // Double-check if effect is still active before updating state
+        if (isEffectActive) {
+          setAllConversations(fetchedConversations);
+          setPagination(prev => ({
+            ...prev,
+            totalItems: fetchedConversations.length,
+            totalPages: Math.ceil(fetchedConversations.length / prev.pageSize)
+          }));
         }
-      }, 100);
-    };
-    
-    // Subscribe through the global manager
-    const unsubscribe = subscriptionManager.subscribe(user.id, handleUpdate);
-    unsubscribeRef.current = unsubscribe;
-    
-    return () => {
-      console.log(`🎯 Component cleanup for user: ${user.id}`);
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
+      } catch (err) {
+        console.error(`❌ [${effectId}] Error reloading conversations:`, err);
       }
     };
-  }, [user?.id]); // Only depend on user ID
-  
-  // Final cleanup on unmount
-  useEffect(() => {
+    
+    // Subscribe to conversation updates
+    const conversationChannel = supabase
+      .channel(`user-conversations-${user.id}-${effectId}`)
+      .on('broadcast', { event: 'conversation_update' }, (payload) => {
+        if (!isEffectActive) return;
+        console.log(`📡 [${effectId}] Received conversation update:`, payload);
+        setTimeout(reloadConversations, 100); // Debounce
+      })
+      .subscribe();
+    
+    // Subscribe to conversation table changes
+    const tableChannel = supabase
+      .channel(`table-conversations-${user.id}-${effectId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversations',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        if (!isEffectActive) return;
+        console.log(`📊 [${effectId}] Database conversation change:`, payload);
+        setTimeout(reloadConversations, 100); // Debounce
+      })
+      .subscribe();
+    
+    // Cleanup function
     return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
-      }
+      console.log(`🧹 [${effectId}] Cleaning up subscriptions`);
+      isEffectActive = false;
+      
+      // Small delay to ensure any pending operations complete
+      setTimeout(() => {
+        conversationChannel?.unsubscribe();
+        tableChannel?.unsubscribe();
+      }, 50);
     };
-  }, []);
+  }, [user?.id]); // ONLY user?.id dependency
   
   // Handle search input with debounce
   const handleSearchChange = useCallback(
@@ -245,23 +177,23 @@ export function ConversationHistory({
   );
   
   // Handle filter changes
-  const handleFilterChange = (key: keyof ConversationFilters, value: any) => {
+  const handleFilterChange = useCallback((key: keyof ConversationFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on filter change
-  };
+  }, [setFilters, setPagination]);
   
   // Handle sort changes
-  const handleSortChange = (sortBy: 'date' | 'duration' | 'relevance') => {
+  const handleSortChange = useCallback((sortBy: 'date' | 'duration' | 'relevance') => {
     setSort(prev => ({
       sortBy,
       sortOrder: prev.sortBy === sortBy ? (prev.sortOrder === 'asc' ? 'desc' : 'asc') : 'desc'
     }));
-  };
+  }, [setSort]);
   
   // Handle pagination
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = useCallback((newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
-  };
+  }, [setPagination]);
   
   // Render conversation card
   const renderConversationCard = (conversation: ConversationSummary) => {
@@ -407,8 +339,6 @@ export function ConversationHistory({
       {process.env.NODE_ENV === 'development' && (
         <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
           <strong>Debug:</strong> User: {user?.id} | Loading: {String(isLoading)}
-          <br />
-          <strong>Active Subscriptions:</strong> {JSON.stringify(subscriptionManager.getActiveSubscriptions())}
         </div>
       )}
       
@@ -575,7 +505,7 @@ export function ConversationHistory({
               variant="outline"
               size="sm"
               className="mt-2"
-              onClick={loadConversations}
+              onClick={() => loadConversations(user?.id)}
             >
               Try Again
             </Button>
