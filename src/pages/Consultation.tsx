@@ -65,36 +65,44 @@ export function Consultation() {
     }
   }, [searchParams, setActiveConversationId]);
   
-  const handleStartNew = () => {
+  // MEMOIZED CALLBACKS - This is the key fix!
+  const handleStartNew = React.useCallback(() => {
     setActiveConversationId(null);
     setCurrentView('active-consultation');
     navigate('/consultation?new=true');
-  };
+  }, [navigate, setActiveConversationId]);
   
-  const handleContinueConversation = (conversation: ConversationSummary) => {
+  const handleContinueConversation = React.useCallback((conversation: ConversationSummary) => {
     setActiveConversationId(conversation.id);
     setCurrentView('active-consultation');
     navigate(`/consultation?continue=${conversation.id}`);
-  };
+  }, [navigate, setActiveConversationId]);
   
-  const handleBackToHistory = () => {
+  const handleBackToHistory = React.useCallback(() => {
     setCurrentView('history');
     navigate('/consultation');
-  };
+  }, [navigate]);
   
-  const handleViewTranscript = () => {
+  const handleViewTranscript = React.useCallback(() => {
     setCurrentView('transcript');
-  };
+  }, []);
   
-  const handleBackFromTranscript = () => {
+  const handleBackFromTranscript = React.useCallback(() => {
     setCurrentView('active-consultation');
-  };
+  }, []);
   
   // Handle document generation request
-  const handleGenerateDocument = async (documentType: string) => {
+  const handleGenerateDocument = React.useCallback(async (documentType: string) => {
     if (!activeConversationId) return;
     navigate(`/documents/generate?type=${documentType}&conversation=${activeConversationId}`);
-  };
+  }, [activeConversationId, navigate]);
+  
+  // Handle schedule follow up
+  const handleScheduleFollowUp = React.useCallback(() => {
+    setActiveConversationId(null);
+    setCurrentScreen('intro');
+    handleStartNew();
+  }, [setActiveConversationId, setCurrentScreen, handleStartNew]);
   
   // Subscribe to real-time updates
   React.useEffect(() => {
@@ -186,8 +194,9 @@ export function Consultation() {
                   </Button>
                 </div>
                 
+                {/* THE KEY FIX: Pass memoized callback and userId properly */}
                 <ConversationHistory
-                  userId={user?.id}
+                  userId={user?.id || ''}
                   onConversationSelect={handleContinueConversation}
                   showFilters={true}
                   refreshTrigger={refreshTrigger}
@@ -264,11 +273,7 @@ export function Consultation() {
             transcript={transcript}
             documentOpportunities={documentOpportunities}
             onGenerateDocument={handleGenerateDocument}
-            onScheduleFollowUp={() => {
-              setActiveConversationId(null);
-              setCurrentScreen('intro');
-              handleStartNew();
-            }}
+            onScheduleFollowUp={handleScheduleFollowUp}
           />
         )}
       </div>
