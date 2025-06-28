@@ -27,7 +27,6 @@ import { Settings } from './pages/Settings';
 import { CheckoutSuccess } from './pages/CheckoutSuccess';
 import { ConversationHistoryPage } from './pages/ConversationHistoryPage';
 import { ThemeProvider } from './context/ThemeContext';
-import { SubscriptionRouteGuard } from './components/guards/SubscriptionRouteGuard';
 
 // Create a client
 const queryClient = new QueryClient({
