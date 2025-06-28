@@ -97,7 +97,6 @@ export async function callTavusAPI<T = any>(
           : 'An unknown error occurred while calling Tavus API'
       );
     }
-    // Debug: log the raw response from the Edge Function
   }
 }
 
