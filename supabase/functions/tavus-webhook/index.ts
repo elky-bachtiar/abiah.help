@@ -68,7 +68,8 @@ function verifyTavusDomain(req: Request): boolean {
     '54.196.75.163',
     '54.196.75.163',
     '99.82.165.75',
-    '99.82.165.77'
+    '99.82.165.77',
+    '3.2.51.19',
   ]
   
   // Get origin from various headers
