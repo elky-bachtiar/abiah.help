@@ -221,11 +221,11 @@ export function ConversationHistory({
     
     // Map persona names to their image IDs
     const personaMap: Record<string, string> = {
-      'General': 'pebc953c8b73',
+      'General': 'p6354bfc198a',
       'FinTech': 'p6354bfc198a',
-      'HealthTech': 'pebc953c8b73',
+      'HealthTech': 'p6354bfc198a',
       'B2B SaaS': 'p6354bfc198a',
-      'Enterprise': 'pebc953c8b73'
+      'Enterprise': 'p6354bfc198a'
     };
     
     return personaMap[personaName] || 'pebc953c8b73'; // Default to first persona if not found
