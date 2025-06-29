@@ -672,7 +672,7 @@ async function processPerceptionAnalysis(
     .update({
       metadata: {
         perception_analysis: {
-          objects_detected: properties?.detected_objects_summary?.length || 0,
+          objects_detected: Array.isArray(properties?.detected_objects_summary) ? properties.detected_objects_summary.length : 0,
           overall_confidence: properties?.overall_confidence,
           analysis_summary: properties?.analysis_summary,
           analyzed_at: new Date().toISOString()
@@ -688,7 +688,7 @@ async function processPerceptionAnalysis(
     conversationId: conversation.id,
     analysis: properties?.analysis_summary,
     confidence: properties?.overall_confidence,
-    objectsDetected: properties?.detected_objects_summary?.length || 0
+    objectsDetected: Array.isArray(properties?.detected_objects_summary) ? properties.detected_objects_summary.length : 0
   })
   
   return {
