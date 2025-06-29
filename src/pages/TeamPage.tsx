@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Users, Briefcase, Github, Linkedin, Award, BrainCircuit, Zap, Code, Cpu, ServerCog, Shield, Mail, MapPin, Calendar, Star, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '../components/ui/Button';
 import { AnimatedBackground, FloatingOrbs, ParticleField, Card3D } from '../components/effects';
 
 
