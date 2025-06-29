@@ -1,4 +1,4 @@
-import { callEdgeFunction } from '@/lib/supabase'
+import { callEdgeFunction } from '../lib/supabase'
 
 const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.abiah.help';
 
