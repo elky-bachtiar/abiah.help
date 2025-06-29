@@ -1,15 +1,16 @@
-import { IConversation } from "@/types";
-import { settingsAtom } from "@/store/settings";
+import { TavusConversation } from "../types";
+import { settingsAtom } from "../store/settings";
 import { getDefaultStore } from "jotai";
 import { callTavusAPI } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
+import { supabase } from "../lib/supabase";
 
 const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || 'false';
 const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.abiah.help';
 
 export interface ConversationCreationResult {
-  conversation?: IConversation;
+  conversation?: TavusConversation;
   validation: ValidationResponse;
   success: boolean;
   error?: string;
@@ -18,7 +19,7 @@ export interface ConversationCreationResult {
 export const createConversation = async (
   userId?: string,
   title?: string
-): Promise<IConversation | null> => {
+): Promise<TavusConversation | null> => {
   // Validate subscription limits before creating conversation
   if (!userId) {
     throw new Error('User ID is required to create a conversation');
@@ -39,7 +40,7 @@ export const createConversation = async (
       
       // If there's an existing conversation with a Tavus ID, return it
       if (existingConversations[0].tavus_conversation_id) {
-        const existingConversation = await callTavusAPI<IConversation>({
+        const existingConversation = await callTavusAPI<TavusConversation>({
           method: 'GET',
           endpoint: `/v2/conversations/${existingConversations[0].tavus_conversation_id}`
         });
@@ -157,7 +158,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   
   try {
     // Call Tavus API through Supabase Edge Function
-    const tavusConversation = await callTavusAPI<IConversation>({
+    const tavusConversation = await callTavusAPI<TavusConversation>({
       method: 'POST', 
       endpoint: '/v2/conversations',
       data: payload,
