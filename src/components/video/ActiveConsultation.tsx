@@ -1,7 +1,14 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAtom } from 'jotai';
 import { useNavigate } from 'react-router-dom';
-import { useDaily, useLocalSessionId, useParticipantIds, useVideoTrack, useAudioTrack } from '@daily-co/daily-react';
+import {
+  useDaily,
+  useLocalSessionId,
+  useParticipantIds,
+  useVideoTrack,
+  useAudioTrack,
+  DailyAudio,
+} from '@daily-co/daily-react';
 import { 
   conversationScreenAtom, 
   videoControlsAtom, 
@@ -71,7 +78,9 @@ export function ActiveConsultation() {
 
   // Get remote video and audio tracks
   const remoteVideos = useRemoteVideoTracks(remoteParticipantIds);
-  const remoteAudios = useRemoteAudioTracks(remoteParticipantIds);
+  // No longer need custom audio tracks, DailyAudio handles it automatically
+
+
 
   useEffect(() => {
     // Prevent duplicate initialization
@@ -227,6 +236,8 @@ export function ActiveConsultation() {
     };
   }, [tavusConversationId, activeConversationId]);
 
+
+
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto">
@@ -291,47 +302,8 @@ export function ActiveConsultation() {
           </div>
         ))}
         
-        {/* Audio elements for remote participants */}
-        {remoteAudios.map(({ pid, audioTrack }) => (
-          <React.Fragment key={`audio-${pid}`}>
-            <audio
-              autoPlay
-              playsInline
-              controls={false}
-              ref={audioEl => {
-                if (audioEl && audioTrack?.track) {
-                  // Create a new MediaStream with just the audio track
-                  const stream = new MediaStream([audioTrack.track]);
-                  // Set the stream as the source for the audio element
-                  audioEl.srcObject = stream;
-                  // Set volume to maximum
-                  audioEl.volume = 1.0;
-                  // Log audio track info for debugging
-                  console.log(`Setting up audio for participant ${pid}:`, {
-                    hasTrack: !!audioTrack?.track,
-                    trackEnabled: audioTrack?.track?.enabled,
-                    trackMuted: audioTrack?.track?.muted,
-                    trackId: audioTrack?.track?.id
-                  });
-                  // Attempt to play the audio
-                  audioEl.play().catch(err => {
-                    console.error('Error playing remote audio:', err);
-                  });
-                } else {
-                  console.warn(`No audio track available for participant ${pid}`);
-                }
-              }}
-            />
-            {/* Debug info */}
-            <div className="hidden">
-              Audio track for {pid}: {audioTrack?.track ? 'Available' : 'Not available'}
-              {audioTrack?.track && (
-                <span> (Enabled: {audioTrack.track.enabled ? 'Yes' : 'No'}, 
-                        Muted: {audioTrack.track.muted ? 'Yes' : 'No'})</span>
-              )}
-            </div>
-          </React.Fragment>
-        ))}
+        {/* Use the official DailyAudio component to handle audio automatically */}
+        <DailyAudio />
       </div>
       <VideoControls
         onToggleCamera={toggleCamera}
@@ -342,47 +314,4 @@ export function ActiveConsultation() {
   );
 }
 
-// Custom hook to get remote audio tracks
-function useRemoteAudioTracks(remoteParticipantIds: string[], maxParticipants = 8) {
-  const [tracks, setTracks] = useState<Array<{pid: string, audioTrack: any}>>([]);
-  
-  // Create an array of fixed length to hold track data
-  const participantIds = remoteParticipantIds.slice(0, maxParticipants);
-  
-  // These hooks need to be called at the component level, not in loops or conditions
-  const audioTrack0 = useAudioTrack(participantIds[0]);
-  const audioTrack1 = useAudioTrack(participantIds[1]);
-  const audioTrack2 = useAudioTrack(participantIds[2]);
-  const audioTrack3 = useAudioTrack(participantIds[3]);
-  const audioTrack4 = useAudioTrack(participantIds[4]);
-  const audioTrack5 = useAudioTrack(participantIds[5]);
-  const audioTrack6 = useAudioTrack(participantIds[6]);
-  const audioTrack7 = useAudioTrack(participantIds[7]);
-  
-  // Now we can safely use an effect to organize our tracks
-  useEffect(() => {
-    const audioTracks = [
-      { pid: participantIds[0], audioTrack: audioTrack0 },
-      { pid: participantIds[1], audioTrack: audioTrack1 },
-      { pid: participantIds[2], audioTrack: audioTrack2 },
-      { pid: participantIds[3], audioTrack: audioTrack3 },
-      { pid: participantIds[4], audioTrack: audioTrack4 },
-      { pid: participantIds[5], audioTrack: audioTrack5 },
-      { pid: participantIds[6], audioTrack: audioTrack6 },
-      { pid: participantIds[7], audioTrack: audioTrack7 },
-    ];
-    
-    setTracks(audioTracks.filter(t => t.pid));
-    
-    // Log audio tracks for debugging
-    console.log('Remote audio tracks updated:', 
-      audioTracks.filter(t => t.pid).map(t => ({
-        hasTrack: !!t.audioTrack?.track,
-        isEnabled: t.audioTrack?.track?.enabled,
-        isMuted: t.audioTrack?.track?.muted
-      }))
-    );
-  }, [remoteParticipantIds]);
-  
-  return tracks;
-}
+// We no longer need the custom audio hooks since we're using DailyAudio component
