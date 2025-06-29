@@ -110,7 +110,8 @@ export async function getTavusVideo(videoId: string): Promise<any | null> {
 export async function callEdgeFunction<T = any>(
   functionName: string,
   payload?: unknown,
-  headers?: Record<string, string>
+  headers?: Record<string, string>,
+  retryCount = 0
 ): Promise<T | null> {
   try {
     console.log(`[DEBUG] callEdgeFunction - About to call ${functionName} with payload:`, payload);
@@ -165,7 +166,7 @@ export async function callEdgeFunction<T = any>(
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body
+      body,
       // Removing credentials: 'include' to avoid CORS issues
     });
     
@@ -196,6 +197,22 @@ export async function callEdgeFunction<T = any>(
     
     console.log(`[DEBUG] callEdgeFunction - Response data:`, responseData);
     
+    // Check for specific errors that we can retry
+    if (!response.ok && retryCount < 2) {
+      // Check for enable_llm_tools error
+      if (responseData?.error?.includes('enable_llm_tools') && 
+          typeof payload === 'object' && payload !== null) {
+        const newPayload = structuredClone(payload);
+        // Remove the problematic property if it exists
+        if (newPayload.payload?.properties?.enable_llm_tools) {
+          delete newPayload.payload.properties.enable_llm_tools;
+          console.log('[DEBUG] Retrying without enable_llm_tools property');
+          return callEdgeFunction<T>(functionName, newPayload, headers, retryCount + 1);
+        }
+      }
+    }
+    
+    // If we get here, either the response was OK or we couldn't fix the error
     if (!response.ok) {
       console.error(`[DEBUG] callEdgeFunction - Error response from ${functionName}:`, responseData);
       throw new Error(

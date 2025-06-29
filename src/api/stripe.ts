@@ -1,50 +1,82 @@
 import { supabase } from '../lib/supabase';
+import { loadStripe } from '@stripe/stripe-js';
+
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 /**
  * Create a Stripe checkout session
  * @param priceId The Stripe price ID
  * @param mode The checkout mode ('subscription' or 'payment')
  * @param trialDays Optional number of trial days for subscriptions
+ * @param autoRedirect If true, automatically redirects to Stripe
  * @returns The checkout session ID and URL
  */
 export async function createCheckoutSession(
-  priceId: string, 
+  priceId: string,
   mode: 'subscription' | 'payment',
-  trialDays?: number
-) {
+  trialDays?: number,
+  autoRedirect: boolean = true
+): Promise<{ sessionId: string; url: string }> {
   try {
-    const { data: authData } = await supabase.auth.getSession();
-    if (!authData.session) {
-      throw new Error('You must be logged in to make a purchase');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('You must be logged in to make a purchase.');
     }
+
+    const body: Record<string, unknown> = {
+      price_id: priceId,
+      mode,
+      success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${window.location.origin}/pricing`,
+    };
+
+    if (mode === 'subscription' && trialDays) {
+      body.subscription_data = {
+        trial_settings: {
+          trial_period_days: trialDays,
+        },
+      };
+    }
+
 
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authData.session.access_token}`,
+        Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({
-        price_id: priceId,
-        mode,
-        trial_period_days: trialDays,
-        success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${window.location.origin}/pricing`,
-      }),
+      body: JSON.stringify(body),
     });
 
+    const responseData = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to create checkout session');
+      throw new Error(responseData.error || 'Failed to create checkout session');
     }
 
-    const { sessionId, url } = await response.json();
+    const { sessionId, url } = responseData;
+    console.log('Created Stripe session:', sessionId);
+
+    if (autoRedirect) {
+      console.log('STRIPE_PUBLISHABLE_KEY', STRIPE_PUBLISHABLE_KEY);
+      if (!STRIPE_PUBLISHABLE_KEY) {
+        console.warn('Stripe publishable key is not set. Falling back to direct redirect.');
+        window.location.href = url;
+      } else {
+        const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
+        console.log('stripe', stripe);
+        if (!stripe) throw new Error('Failed to load Stripe.js');
+        await stripe.redirectToCheckout({ sessionId });
+      }
+    }
+
     return { sessionId, url };
   } catch (error) {
     console.error('Error creating checkout session:', error);
     throw error;
   }
 }
+
 
 /**
  * Get the current user's subscription
@@ -98,7 +130,6 @@ export async function getUserOrders() {
  * @returns The product details or null if not found
  */
 export function getProductByPriceId(priceId: string) {
-  // This would typically be an API call, but for simplicity we're importing from the config
-    const { products } = require('../stripe-config');
+  const { products } = require('../stripe-config');
   return products.find((product: any) => product.priceId === priceId) || null;
 }

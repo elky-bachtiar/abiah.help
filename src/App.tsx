@@ -3,12 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAtom } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './hooks/useAuth';
 import { StripeProvider } from './context/StripeContext';
 import { isAuthenticatedAtom, authLoadingAtom } from './store/auth';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import { SubscriptionRouteGuard } from './components/guards/SubscriptionRouteGuard';
 import { Home } from './pages/Home';
 import { Home as Main2Home } from './pages/main2/Home';
 import { PitchDeck } from './pages/pitchdeck';
@@ -26,7 +28,6 @@ import { Settings } from './pages/Settings';
 import { CheckoutSuccess } from './pages/CheckoutSuccess';
 import { ConversationHistoryPage } from './pages/ConversationHistoryPage';
 import { ThemeProvider } from './context/ThemeContext';
-import { SubscriptionRouteGuard } from './components/guards/SubscriptionRouteGuard';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -134,18 +135,22 @@ function AppContent() {
                 <Route 
                   path="/consultation" 
                   element={
-                    <ProtectedRoute>
-                      <SubscriptionRouteGuard actionType="conversation">
-                        <Consultation />
-                      </SubscriptionRouteGuard>
-                    </ProtectedRoute>
+                    <ErrorBoundary>
+                      <ProtectedRoute>
+                        <SubscriptionRouteGuard actionType="conversation">
+                          <Consultation />
+                        </SubscriptionRouteGuard>
+                      </ProtectedRoute>
+                    </ErrorBoundary>
                   } 
                 />
                 <Route 
                   path="/documents" 
                   element={
                     <ProtectedRoute>
-                      <Documents />
+                      <SubscriptionRouteGuard actionType="document_generation">
+                        <Documents />
+                      </SubscriptionRouteGuard>
                     </ProtectedRoute>
                   } 
                 />
@@ -153,7 +158,9 @@ function AppContent() {
                   path="/documents/:id" 
                   element={
                     <ProtectedRoute>
-                      <Documents />
+                      <SubscriptionRouteGuard actionType="document_generation">
+                        <Documents />
+                      </SubscriptionRouteGuard>
                     </ProtectedRoute>
                   } 
                 />
@@ -185,7 +192,11 @@ function AppContent() {
                   path="/conversation-history" 
                   element={
                     <ProtectedRoute>
-                      <ConversationHistoryPage />
+                      <ErrorBoundary>
+                        <SubscriptionRouteGuard actionType="conversation">
+                          <ConversationHistoryPage />
+                        </SubscriptionRouteGuard>
+                      </ErrorBoundary>
                     </ProtectedRoute>
                   } 
                 />

@@ -72,11 +72,40 @@ serve(async (req) => {
     
     console.log(`Validating ${validationRequest.action_type} for user ${validationRequest.user_id}`)
 
-    // Get user's current subscription
+    // Step 1: Get the customer_id from stripe_customers table using user_id
+    const { data: customerData, error: customerError } = await supabaseClient
+      .from('stripe_customers')
+      .select('customer_id')
+      .eq('user_id', validationRequest.user_id)
+      .single()
+    
+    if (customerError || !customerData) {
+      console.error('Error fetching customer data:', customerError)
+      return new Response(
+        JSON.stringify({
+          allowed: false,
+          subscription_status: 'none',
+          upgrade_required: true,
+          errors: ['No customer record found'],
+          current_usage: { sessions_used: 0, minutes_used: 0, documents_generated: 0, tokens_consumed: 0 },
+          limits: { max_sessions: 0, max_minutes: 0, max_documents: 0, max_tokens: 0 },
+          remaining: { sessions: 0, minutes: 0, documents: 0, tokens: 0 },
+          tier_info: {
+            current_tier: 'none',
+            allows_team_access: false,
+            allows_custom_personas: false,
+            allows_unlimited_tokens: false
+          }
+        } as ValidationResponse),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    // Step 2: Get subscription data using customer_id
     const { data: subscription, error: subError } = await supabaseClient
-      .from('stripe_user_subscriptions')
+      .from('stripe_subscriptions')
       .select('*')
-      .eq('customer_id', validationRequest.user_id)
+      .eq('customer_id', customerData.customer_id)
       .single()
 
     if (subError || !subscription) {
@@ -101,18 +130,63 @@ serve(async (req) => {
     }
 
     // Check if subscription is active
-    if (!['active', 'trialing'].includes(subscription.subscription_status)) {
+    if (subscription.status !== 'active') {
+      // If subscription is in trial mode, check if trial has ended
+      if (subscription.status === 'trialing') {
+        const trialEndTime = subscription.current_period_end * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        
+        if (currentTime > trialEndTime) {
+          return new Response(
+            JSON.stringify({
+              allowed: false,
+              subscription_status: 'trial_ended',
+              upgrade_required: true,
+              errors: [`Your free trial has ended. Please upgrade to continue using the service.`],
+              current_usage: { sessions_used: 0, minutes_used: 0, documents_generated: 0, tokens_consumed: 0 },
+              limits: { max_sessions: 0, max_minutes: 0, max_documents: 0, max_tokens: 0 },
+              remaining: { sessions: 0, minutes: 0, documents: 0, tokens: 0 },
+              tier_info: {
+                current_tier: 'trial_ended',
+                allows_team_access: false,
+                allows_custom_personas: false,
+                allows_unlimited_tokens: false
+              }
+            } as ValidationResponse),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      } else {
+        return new Response(
+          JSON.stringify({
+            allowed: false,
+            subscription_status: subscription.status,
+            upgrade_required: true,
+            errors: [`Subscription is ${subscription.status}. Please update your payment method or reactivate your subscription.`],
+            current_usage: { sessions_used: 0, minutes_used: 0, documents_generated: 0, tokens_consumed: 0 },
+            limits: { max_sessions: 0, max_minutes: 0, max_documents: 0, max_tokens: 0 },
+            remaining: { sessions: 0, minutes: 0, documents: 0, tokens: 0 },
+            tier_info: {
+              current_tier: subscription.status,
+              allows_team_access: false,
+              allows_custom_personas: false,
+              allows_unlimited_tokens: false
+            }
+          } as ValidationResponse),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
       return new Response(
         JSON.stringify({
           allowed: false,
-          subscription_status: subscription.subscription_status,
+          subscription_status: subscription.status,
           upgrade_required: true,
-          errors: [`Subscription is ${subscription.subscription_status}. Please update your payment method or reactivate your subscription.`],
+          errors: [`Subscription is ${subscription.status}. Please update your payment method or reactivate your subscription.`],
           current_usage: { sessions_used: 0, minutes_used: 0, documents_generated: 0, tokens_consumed: 0 },
           limits: { max_sessions: 0, max_minutes: 0, max_documents: 0, max_tokens: 0 },
           remaining: { sessions: 0, minutes: 0, documents: 0, tokens: 0 },
           tier_info: {
-            current_tier: subscription.subscription_status,
+            current_tier: subscription.status,
             allows_team_access: false,
             allows_custom_personas: false,
             allows_unlimited_tokens: false
@@ -133,7 +207,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           allowed: false,
-          subscription_status: subscription.subscription_status,
+          subscription_status: subscription.status,
           upgrade_required: false,
           errors: ['Subscription tier configuration not found'],
           current_usage: { sessions_used: 0, minutes_used: 0, documents_generated: 0, tokens_consumed: 0 },
@@ -178,23 +252,15 @@ serve(async (req) => {
         .single()
 
       if (createError) {
-        throw new Error(`Failed to create usage tracking record: ${createError.message}`)
+        throw createError
       }
       currentUsage = newUsage
     } else {
       currentUsage = usageTracking
     }
 
-    // Validate based on action type
-    const validation = await validateAction(
-      validationRequest,
-      currentUsage,
-      limits,
-      supabaseClient
-    )
-
     return new Response(
-      JSON.stringify(validation),
+      JSON.stringify(await validateAction(validationRequest, currentUsage, limits, supabaseClient)),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
@@ -286,7 +352,7 @@ async function validateAction(
 
   return {
     allowed,
-    subscription_status: 'active', // We already checked this above
+    subscription_status: 'active',
     current_usage: {
       sessions_used: currentUsage.sessions_used,
       minutes_used: currentUsage.minutes_used,

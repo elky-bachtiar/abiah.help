@@ -8,7 +8,6 @@ const stripe = new Stripe(stripeSecret, {
   appInfo: {
     name: 'Bolt Integration',
     version: '1.0.0',
-    apiVersion: '2023-10-16'
   },
 });
 
@@ -189,7 +188,15 @@ Deno.serve(async (req) => {
         },
       ],
       mode,
-      ...(mode === 'subscription' && trial_period_days ? { trial_period_days } : {}),
+       ...(mode === 'subscription' && trial_period_days
+    ? {
+        subscription_data: {
+          trial_settings: {
+            trial_period_days,
+          },
+        },
+      }
+    : {}),
       success_url,
       cancel_url,
     });

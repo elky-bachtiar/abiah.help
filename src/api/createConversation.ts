@@ -1,9 +1,12 @@
 import { IConversation } from "@/types";
 import { settingsAtom } from "@/store/settings";
 import { getDefaultStore } from "jotai";
-import { callTavusAPI, TAVUS_CONFIG } from "./tavus";
+import { callTavusAPI } from "./tavus";
 import { createConversationRecord, updateConversationWithTavusId } from "./conversationApi";
 import { canStartConversation, ValidationResponse } from "./subscriptionValidator";
+
+const VITE_ENABLE_LLM_TOOLS = import.meta.env.VITE_ENABLE_LLM_TOOLS || 'false';
+const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.abiah.help';
 
 export interface ConversationCreationResult {
   conversation?: IConversation;
@@ -15,10 +18,41 @@ export interface ConversationCreationResult {
 export const createConversation = async (
   userId?: string,
   title?: string
-): Promise<IConversation> => {
+): Promise<IConversation | null> => {
   // Validate subscription limits before creating conversation
   if (!userId) {
     throw new Error('User ID is required to create a conversation');
+  }
+
+  // Check if there's already a conversation in progress for this user
+  try {
+    const { data: existingConversations } = await supabase
+      .from('conversations')
+      .select('id, tavus_conversation_id, status, title')
+      .eq('user_id', userId)
+      .eq('status', 'in_progress')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (existingConversations && existingConversations.length > 0) {
+      console.log('Found existing in-progress conversation:', existingConversations[0]);
+      
+      // If there's an existing conversation with a Tavus ID, return it
+      if (existingConversations[0].tavus_conversation_id) {
+        const existingConversation = await callTavusAPI<IConversation>({
+          method: 'GET',
+          endpoint: `/v2/conversations/${existingConversations[0].tavus_conversation_id}`
+        });
+        
+        if (existingConversation && existingConversation.status === 'active') {
+          console.log('Returning existing active conversation:', existingConversation);
+          return existingConversation;
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Error checking for existing conversations:', error);
+    // Continue with creating a new conversation
   }
 
   // Check subscription limits first
@@ -59,6 +93,8 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     contextString = `You are talking with the user, ${settings.name}. `;
   }
   contextString += settings.context || default_context;
+
+  console.log('VITE_ENABLE_LLM_TOOLS', VITE_ENABLE_LLM_TOOLS);
   
   // If a full payload override is provided in settings, use it
   const payload = settings.payload ?? {
@@ -66,12 +102,12 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     ...(settings.replica ? { replica_id: settings.replica } : {}),
     persona_id: settings.persona || "pebc953c8b73",
     // Add webhook URL for conversation completion
-    callback_url: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tavus-webhook`,
+    callback_url: `${VITE_SUPABASE_URL}/functions/v1/tavus-webhook`,
     conversation_name: title || `Conversation on ${new Date().toLocaleDateString()}`,
     conversational_context: contextString,
     custom_greeting: settings.greeting !== undefined && settings.greeting !== null 
       ? settings.greeting 
-      : "Hey there! I'm your technical co-pilot! Let's get get started building with Tavus.",
+      : "Hey I'm Abiah! Your personal mentor.",
     properties: {
       // These will be undefined unless injected via settings.payload
       max_call_duration: 180,
@@ -84,8 +120,6 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
       recording_s3_bucket_name: 'conversation-recordings',
       recording_s3_bucket_region: 'us-east-1',
       aws_assume_role_arn: '',
-      // Enable LLM tools if configured
-      enable_llm_tools: import.meta.env.VITE_ENABLE_LLM_TOOLS === 'true'
     }
   };
 
@@ -117,14 +151,14 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   
   // Add tools configuration header if enabled
   const customHeaders: Record<string, string> = {};
-  if (import.meta.env.VITE_ENABLE_LLM_TOOLS === 'true') {
+  if (VITE_ENABLE_LLM_TOOLS === 'true') {
     customHeaders['x-tavus-enable-tools'] = 'true';
   }
   
   try {
     // Call Tavus API through Supabase Edge Function
     const tavusConversation = await callTavusAPI<IConversation>({
-      method: 'POST',
+      method: 'POST', 
       endpoint: '/v2/conversations',
       data: payload,
       headers: customHeaders
@@ -145,7 +179,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
     }
     
     return tavusConversation;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating conversation:', error);
     throw new Error(`Failed to create conversation: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

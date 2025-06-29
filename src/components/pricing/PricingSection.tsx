@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Star, MessageSquare, Users, Crown, ArrowRight } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { createCheckoutSession } from '../../api/stripe';
 
 interface PricingSectionProps {
   hideSupport?: boolean;
@@ -9,10 +10,12 @@ interface PricingSectionProps {
 
 export function PricingSection({ hideSupport = false }: PricingSectionProps) {
   const [isAnnual, setIsAnnual] = useState(false);
-  
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
   const plans = [
     {
-      name: "Starter",
+      id: 'prod_SYErznlRJrJHln',
+      name: "Founder Essential",
       price: isAnnual ? 79 : 99,
       originalPrice: isAnnual ? 99 : null,
       subtitle: "Perfect for getting started",
@@ -25,10 +28,11 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
       ],
       popular: false,
       gradient: "from-blue-500 to-blue-600",
-      priceId: isAnnual ? 'price_starter_yearly' : 'price_starter_monthly'
+      priceId: isAnnual ? 'price_1RdT9CD5a0uk1qUEP1jnRYQi' : 'price_1Rd8NVD5a0uk1qUEQSEg8jCp'
     },
     {
-      name: "Professional",
+      id: 'prod_SYZzwqHSFjVPjm',
+      name: "Founder Companion",
       price: isAnnual ? 159 : 199,
       originalPrice: isAnnual ? 199 : null,
       subtitle: "Most popular for growing startups",
@@ -41,7 +45,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
       ],
       popular: true,
       gradient: "from-primary to-secondary",
-      priceId: isAnnual ? 'price_professional_yearly' : 'price_professional_monthly'
+      priceId: isAnnual ? 'price_1RdTV9D5a0uk1qUEhqJKCcU8' : 'price_1RdSpQD5a0uk1qUEmESxoySs'
     },
     {
       name: "Enterprise",
@@ -60,12 +64,11 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
       isEnterprise: true
     }
   ];
-  
+
   return (
     <section className="py-20 bg-gradient-to-b from-background to-background/50 relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -80,7 +83,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Choose the perfect plan for your startup journey. All plans include our core AI mentorship features.
           </p>
-          
+
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
@@ -88,7 +91,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className="relative inline-flex h-6 w-11 items-center rounded-full bg-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="relative inline-flex h-6 w-11 items-center rounded-full bg-primary/20 transition-colors"
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-primary transition-transform ${
@@ -106,7 +109,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
             )}
           </div>
         </motion.div>
-        
+
         <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan, index) => (
             <motion.div
@@ -122,7 +125,6 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                   ? 'border-primary shadow-lg shadow-primary/20 scale-105' 
                   : 'border-border hover:border-primary/50 hover:shadow-lg'
               }`}>
-                {/* Popular badge */}
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <div className="bg-gradient-to-r from-primary to-secondary text-white px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
@@ -131,8 +133,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                     </div>
                   </div>
                 )}
-                
-                {/* Plan header */}
+
                 <div className="text-center mb-8">
                   <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center`}>
                     <plan.icon className="w-8 h-8 text-white" />
@@ -140,8 +141,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                   <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
                   <p className="text-muted-foreground text-sm">{plan.subtitle}</p>
                 </div>
-                
-                {/* Pricing */}
+
                 <div className="text-center mb-8">
                   {plan.isEnterprise ? (
                     <div className="text-4xl font-bold text-foreground">Custom</div>
@@ -161,8 +161,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                     </div>
                   )}
                 </div>
-                
-                {/* Features */}
+
                 <ul className="space-y-4 mb-8">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-3">
@@ -173,8 +172,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                     </li>
                   ))}
                 </ul>
-                
-                {/* CTA Button */}
+
                 <Button
                   size="lg"
                   className={`w-full ${
@@ -184,30 +182,37 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                       ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
                       : 'bg-primary hover:bg-primary/90'
                   } text-white group`}
-                  onClick={() => {
+                  disabled={loadingPlan === plan.name}
+                  onClick={async () => {
                     if (plan.isEnterprise) {
-                      window.location.href = 'mailto:enterprise@abiah.help';
+                      window.location.href = 'mailto:hello@abiah.help';
                     } else {
-                      // Handle subscription flow
-                      console.log('Starting subscription for:', plan.priceId);
+                      try {
+                        setLoadingPlan(plan.name);
+                        await createCheckoutSession(plan.priceId, 'subscription', 5, true);
+                      } catch (err) {
+                        console.error(err);
+                        alert('Could not start checkout session.');
+                      } finally {
+                        setLoadingPlan(null);
+                      }
                     }
                   }}
                 >
-                  {plan.isEnterprise ? 'Contact Sales' : 'Start Free Trial'}
+                  {loadingPlan === plan.name ? 'Redirecting...' : plan.isEnterprise ? 'Contact Sales' : 'Start Free Trial'}
                   <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                 </Button>
-                
+
                 {!plan.isEnterprise && (
                   <p className="text-center text-xs text-muted-foreground mt-3">
-                    14-day free trial • No credit card required
+                    5-day free trial • No credit card required
                   </p>
                 )}
               </div>
             </motion.div>
           ))}
         </div>
-        
-        {/* Bottom CTA */}
+
         {!hideSupport && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -222,7 +227,7 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => window.location.href = 'mailto:support@abiah.help'}
+              onClick={() => window.location.href = 'mailto:help@abiah.help'}
             >
               Contact Support
             </Button>

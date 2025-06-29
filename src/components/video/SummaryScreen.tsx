@@ -6,12 +6,14 @@ import { conversationScreenAtom, sessionTimerAtom } from '../../store/consultati
 import { userDisplayNameAtom } from '../../store/auth';
 import { Button } from '../ui/Button-bkp';
 import { Card } from '../ui/Card';
+import { useNavigate } from 'react-router-dom';
 import { formatDuration } from '../../lib/utils';
 
 export function SummaryScreen() {
   const [, setCurrentScreen] = useAtom(conversationScreenAtom);
   const [sessionTimer] = useAtom(sessionTimerAtom);
   const [displayName] = useAtom(userDisplayNameAtom);
+  const navigate = useNavigate();
 
   const sessionDuration = formatDuration(sessionTimer.duration);
 
@@ -51,8 +53,7 @@ export function SummaryScreen() {
   };
 
   const handleBackToDashboard = () => {
-    // Navigate back to dashboard
-    window.location.href = '/dashboard';
+    navigate('/conversation-history');
   };
 
   return (
@@ -206,9 +207,9 @@ export function SummaryScreen() {
           size="lg"
           variant="ghost"
           onClick={handleBackToDashboard}
-          className="text-white hover:bg-white/10 group"
+          className="text-white hover:bg-white/10 group flex items-center"
         >
-          Back to Dashboard
+          View Conversation History
           <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
         </Button>
       </motion.div>
