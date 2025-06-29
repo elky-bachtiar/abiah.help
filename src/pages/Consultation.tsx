@@ -209,12 +209,14 @@ export function Consultation() {
                 </div>
                 
                 {/* ConversationHistory renders once and stays mounted */}
-                <ConversationHistory
-                  userId={userId}
-                  onConversationSelect={handleContinueConversation}
-                  showFilters={true}
-                  refreshTrigger={refreshTrigger}
-                />
+                {userId && (
+                  <ConversationHistory
+                    userId={userId}
+                    onConversationSelect={handleContinueConversation}
+                    showFilters={true}
+                    refreshTrigger={refreshTrigger}
+                  />
+                )}
               </Card>
             </motion.div>
           </div>
