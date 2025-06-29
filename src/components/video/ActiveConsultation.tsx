@@ -20,15 +20,31 @@ import { SessionTimer } from './SessionTimer';
 
 // Custom hook: always call the same number of hooks
 function useRemoteVideoTracks(remoteParticipantIds, maxParticipants = 8) {
-  // Always call the same number of hooks, up to maxParticipants
-  const tracks = [];
-  for (let i = 0; i < maxParticipants; i++) {
-    const pid = remoteParticipantIds[i];
-    tracks.push({
-      pid,
-      videoTrack: useVideoTrack(pid),
-    });
-  }
+  // Slice the array to ensure we don't exceed maxParticipants
+  const participantIds = remoteParticipantIds.slice(0, maxParticipants);
+  
+  // Call hooks at the component level - fixed number of calls regardless of input
+  const videoTrack0 = useVideoTrack(participantIds[0]);
+  const videoTrack1 = useVideoTrack(participantIds[1]);
+  const videoTrack2 = useVideoTrack(participantIds[2]);
+  const videoTrack3 = useVideoTrack(participantIds[3]);
+  const videoTrack4 = useVideoTrack(participantIds[4]);
+  const videoTrack5 = useVideoTrack(participantIds[5]);
+  const videoTrack6 = useVideoTrack(participantIds[6]);
+  const videoTrack7 = useVideoTrack(participantIds[7]);
+  
+  // Combine the tracks with their participant IDs
+  const tracks = [
+    { pid: participantIds[0], videoTrack: videoTrack0 },
+    { pid: participantIds[1], videoTrack: videoTrack1 },
+    { pid: participantIds[2], videoTrack: videoTrack2 },
+    { pid: participantIds[3], videoTrack: videoTrack3 },
+    { pid: participantIds[4], videoTrack: videoTrack4 },
+    { pid: participantIds[5], videoTrack: videoTrack5 },
+    { pid: participantIds[6], videoTrack: videoTrack6 },
+    { pid: participantIds[7], videoTrack: videoTrack7 },
+  ];
+  
   return tracks.filter(t => t.pid); // Only return those with a participant
 }
 
@@ -330,24 +346,37 @@ export function ActiveConsultation() {
 function useRemoteAudioTracks(remoteParticipantIds: string[], maxParticipants = 8) {
   const [tracks, setTracks] = useState<Array<{pid: string, audioTrack: any}>>([]);
   
-  // Use effect to update tracks when participants change
+  // Create an array of fixed length to hold track data
+  const participantIds = remoteParticipantIds.slice(0, maxParticipants);
+  
+  // These hooks need to be called at the component level, not in loops or conditions
+  const audioTrack0 = useAudioTrack(participantIds[0]);
+  const audioTrack1 = useAudioTrack(participantIds[1]);
+  const audioTrack2 = useAudioTrack(participantIds[2]);
+  const audioTrack3 = useAudioTrack(participantIds[3]);
+  const audioTrack4 = useAudioTrack(participantIds[4]);
+  const audioTrack5 = useAudioTrack(participantIds[5]);
+  const audioTrack6 = useAudioTrack(participantIds[6]);
+  const audioTrack7 = useAudioTrack(participantIds[7]);
+  
+  // Now we can safely use an effect to organize our tracks
   useEffect(() => {
-    const newTracks = [];
-    for (let i = 0; i < Math.min(remoteParticipantIds.length, maxParticipants); i++) {
-      const pid = remoteParticipantIds[i];
-      const audioTrack = useAudioTrack(pid);
-      newTracks.push({
-        pid,
-        audioTrack,
-      });
-    }
+    const audioTracks = [
+      { pid: participantIds[0], audioTrack: audioTrack0 },
+      { pid: participantIds[1], audioTrack: audioTrack1 },
+      { pid: participantIds[2], audioTrack: audioTrack2 },
+      { pid: participantIds[3], audioTrack: audioTrack3 },
+      { pid: participantIds[4], audioTrack: audioTrack4 },
+      { pid: participantIds[5], audioTrack: audioTrack5 },
+      { pid: participantIds[6], audioTrack: audioTrack6 },
+      { pid: participantIds[7], audioTrack: audioTrack7 },
+    ];
     
-    setTracks(newTracks.filter(t => t.pid));
+    setTracks(audioTracks.filter(t => t.pid));
     
     // Log audio tracks for debugging
     console.log('Remote audio tracks updated:', 
-      newTracks.filter(t => t.pid).map(t => ({
-        pid: t.pid,
+      audioTracks.filter(t => t.pid).map(t => ({
         hasTrack: !!t.audioTrack?.track,
         isEnabled: t.audioTrack?.track?.enabled,
         isMuted: t.audioTrack?.track?.muted
