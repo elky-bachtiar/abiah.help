@@ -7,6 +7,7 @@ const stripe = new Stripe(stripeSecret, {
   appInfo: {
     name: 'Bolt Integration',
     version: '1.0.0',
+    apiVersion: '2023-10-16'
   },
 });
 
