@@ -62,7 +62,11 @@ function verifyTavusDomain(req: Request): boolean {
     'tavusapi.com',
     'webhook.tavus.io',
     'api.tavus.io',
-    'tavus.daily.co'
+    'tavus.daily.co',
+    '3.228.65.121',
+    '3.228.65.121',
+    '54.196.75.163',
+    '54.196.75.163'
   ]
   
   // Get origin from various headers
