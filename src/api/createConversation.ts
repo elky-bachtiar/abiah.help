@@ -101,7 +101,7 @@ Above all, Abiah is not here to tell you what you want to hear. He’s here to p
   const payload = settings.payload ?? {
     // Optional: settings.replica or leave undefined for new conversation
     ...(settings.replica ? { replica_id: settings.replica } : {}),
-    persona_id: settings.persona || "pebc953c8b73",
+    persona_id: settings.persona || "p6354bfc198a",
     // Add webhook URL for conversation completion
     callback_url: `${VITE_SUPABASE_URL}/functions/v1/tavus-webhook`,
     conversation_name: title || `Conversation on ${new Date().toLocaleDateString()}`,
