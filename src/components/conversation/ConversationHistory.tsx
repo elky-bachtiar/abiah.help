@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Calendar, Clock, Tag, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
@@ -151,55 +152,84 @@ export function ConversationHistory({
       }
     };
     
+    // Create unique channel names with timestamp to avoid subscription conflicts
+    const timestamp = Date.now();
+    const channelId = `conversation-${timestamp}`;
+    const tableId = `conversation-table-${timestamp}`;
+    console.log(`📝 Creating channels: ${channelId}, ${tableId}`);
+    
     // Subscribe to conversation updates
     const conversationChannel = supabase
-      .channel(`user-conversations-${userId}-${effectId}`)
-      .on('broadcast', { event: 'conversation_update' }, (payload) => {
+      .channel(channelId)
+      .on('broadcast', { event: 'conversation_update' }, () => {
         if (!isEffectActive) return;
         console.log(`📡 [${effectId}] Received conversation update event`);
         // Debounce with a slightly longer delay to avoid rapid reloads
         setTimeout(reloadConversations, 300);
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 [${effectId}] Conversation channel status: ${status}`);
+      });
     
     // Subscribe to conversation table changes
     const tableChannel = supabase
-      .channel(`table-conversations-${userId}-${effectId}`)
+      .channel(tableId)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'conversations',
         filter: `user_id=eq.${userId}`
-      }, (payload) => {
+      }, () => {
         if (!isEffectActive) return;
         console.log(`📊 [${effectId}] Database conversation change detected`);
         // Debounce with a slightly longer delay
         setTimeout(reloadConversations, 300);
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 [${effectId}] Table channel status: ${status}`);
+      });
     
     console.log(`🔄 [${effectId}] Subscriptions established successfully`);
     
     // Cleanup function
     return () => {
-      console.log(`🧹 [${effectId}] Cleaning up subscriptions for user: ${userId}`);
-      isEffectActive = false;
+      const cleanupEffectId = `cleanup-${Date.now()}`;
+      console.log(`🧹 [${cleanupEffectId}] Cleaning up subscription effect`);
       
-      // Small delay to ensure any pending operations complete
-      setTimeout(() => {
-        try {
-          console.log(`🧹 [${effectId}] Unsubscribing from channels`);
-          conversationChannel?.unsubscribe();
-          tableChannel?.unsubscribe();
-          supabase.removeChannel(conversationChannel);
-          supabase.removeChannel(tableChannel);
-          console.log(`🧹 [${effectId}] Channels successfully removed`);
-        } catch (err) {
-          console.error(`🧹 [${effectId}] Error during cleanup:`, err);
-        }
-      }, 50);
+      // Immediately unsubscribe and remove channels
+      try {
+        console.log(`🧹 [${cleanupEffectId}] Unsubscribing from channels`);
+        conversationChannel?.unsubscribe();
+        tableChannel?.unsubscribe();
+        
+        // Explicitly remove channels to prevent memory leaks
+        console.log(`🧹 [${cleanupEffectId}] Removing channels from supabase client`);
+        supabase.removeChannel(conversationChannel);
+        supabase.removeChannel(tableChannel);
+        
+        console.log(`🧹 [${cleanupEffectId}] Channels successfully removed`);
+      } catch (err) {
+        console.error(`🧹 [${cleanupEffectId}] Error during cleanup:`, err);
+      }
     };
   }, [userId]); // ONLY userId dependency
+  
+  // Helper function to map mentor persona to image id
+  const getPersonaImageId = (personaName: string, personaId?: string): string => {
+    // If we have a direct persona ID in the metadata, use it
+    if (personaId) return personaId;
+    
+    // Map persona names to their image IDs
+    const personaMap: Record<string, string> = {
+      'General': 'pebc953c8b73',
+      'FinTech': 'p6354bfc198a',
+      'HealthTech': 'pebc953c8b73',
+      'B2B SaaS': 'p6354bfc198a',
+      'Enterprise': 'pebc953c8b73'
+    };
+    
+    return personaMap[personaName] || 'pebc953c8b73'; // Default to first persona if not found
+  };
   
   // Handle search input with debounce
   const handleSearchChange = useCallback(
@@ -313,8 +343,16 @@ export function ConversationHistory({
                   </div>
                 )}
               </div>
-              <div className="text-text-secondary">
-                {conversation.mentor_persona} mentor
+              <div className="flex items-center text-text-secondary">
+                {/* Persona profile image */}
+                <div className="mr-2">
+                  <img 
+                    src={`/images/${getPersonaImageId(conversation.mentor_persona, conversation.metadata?.persona_id)}.png`}
+                    alt="mentor"
+                    className="w-6 h-6 rounded-full object-cover border border-neutral-200"
+                  />
+                </div>
+                mentor
               </div>
             </div>
             
@@ -369,13 +407,6 @@ export function ConversationHistory({
   
   return (
     <div className="conversation-history">
-      {/* Debug info (remove in production) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-          <strong>Debug:</strong> User: {userId} | Loading: {String(isLoading)}
-        </div>
-      )}
-      
       {/* Search and Filters */}
       {showFilters && (
         <div className="mb-6">

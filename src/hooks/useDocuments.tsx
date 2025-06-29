@@ -299,9 +299,16 @@ export function useDocuments() {
   const subscribeToGenerationUpdates = useCallback((consultationId: string) => {
     if (!user) return () => {};
     
+    // Create unique channel names with timestamp to prevent duplicate subscriptions
+    const timestamp = Date.now();
+    const requestChannelName = `document-requests-${consultationId}-${timestamp}`;
+    const documentsChannelName = `generated-documents-${consultationId}-${timestamp}`;
+    
+    console.log(`Creating document subscription channels: ${requestChannelName}, ${documentsChannelName}`);
+    
     // Subscribe to document_generation_requests table
     const requestsChannel = supabase
-      .channel(`document-requests-${consultationId}`)
+      .channel(requestChannelName)
       .on(
         'postgres_changes',
         {
@@ -348,7 +355,7 @@ export function useDocuments() {
     
     // Subscribe to generated_documents table
     const documentsChannel = supabase
-      .channel(`generated-documents-${consultationId}`)
+      .channel(documentsChannelName)
       .on(
         'postgres_changes',
         {
@@ -372,8 +379,12 @@ export function useDocuments() {
       .subscribe();
     
     return () => {
+      console.log(`Cleaning up document subscription channels: ${requestChannelName}, ${documentsChannelName}`);
+      requestsChannel?.unsubscribe();
+      documentsChannel?.unsubscribe();
       supabase.removeChannel(requestsChannel);
       supabase.removeChannel(documentsChannel);
+      console.log(`Document channels successfully removed`);
     };
   }, [user]);
 
@@ -381,8 +392,14 @@ export function useDocuments() {
   const subscribeToConversationEvents = useCallback((consultationId: string) => {
     if (!user) return () => {};
     
+    // Create unique channel name with timestamp
+    const timestamp = Date.now();
+    const channelName = `user-${user.id}-${consultationId}-${timestamp}`;
+    
+    console.log(`Creating conversation events channel: ${channelName}`);
+    
     const channel = supabase
-      .channel(`user-${user.id}`)
+      .channel(channelName)
       .on(
         'broadcast',
         { event: 'conversation_completed' },
@@ -402,7 +419,10 @@ export function useDocuments() {
       .subscribe();
     
     return () => {
+      console.log(`Cleaning up conversation events channel: ${channelName}`);
+      channel?.unsubscribe();
       supabase.removeChannel(channel);
+      console.log(`Conversation events channel successfully removed`);
     };
   }, [user]);
 

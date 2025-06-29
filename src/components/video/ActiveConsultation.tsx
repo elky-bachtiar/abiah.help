@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAtom } from 'jotai';
+import { useNavigate } from 'react-router-dom';
 import { useDaily, useLocalSessionId, useParticipantIds, useVideoTrack, useAudioTrack } from '@daily-co/daily-react';
 import { 
   conversationScreenAtom, 
@@ -43,6 +44,7 @@ export function ActiveConsultation() {
   const [isLoading, setIsLoading] = useState(true);
   const isInitializedRef = useRef(false);
   const endingConversationRef = useRef(false);
+  const navigate = useNavigate();
 
   // Daily hooks
   const daily = useDaily();
@@ -144,6 +146,11 @@ export function ActiveConsultation() {
     daily?.setLocalAudio(!localAudio || localAudio.isOff);
     setVideoControls(prev => ({ ...prev, isMicOn: !prev.isMicOn }));
   }, [daily, localAudio, setVideoControls]);
+  
+  // Navigate to conversation history
+  const goToConversationHistory = useCallback(() => {
+    navigate('/conversation-history');
+  }, [navigate]);
 
   const handleEndConsultation = useCallback(() => {
     // Prevent multiple end calls
@@ -219,6 +226,16 @@ export function ActiveConsultation() {
   return (
     <div>
       <SessionTimer />
+      
+      {/* Conversation History Link */}
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={goToConversationHistory}
+          className="flex items-center px-4 py-2 text-sm font-medium text-white bg-secondary hover:bg-secondary-600 rounded-lg transition-colors">
+          View Conversation History
+        </button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Render local video */}
         {localSessionId && (
