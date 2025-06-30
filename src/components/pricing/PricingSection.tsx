@@ -197,8 +197,8 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                           // Store selected plan in session storage to potentially use after login
                           sessionStorage.setItem('selectedPlan', plan.priceId);
                           
-                          // Redirect to signup page
-                          navigate('/signup', { 
+                          // Redirect to register page
+                          navigate('/register', { 
                             state: { 
                               message: 'Please create an account or sign in to start your free trial.',
                               returnTo: '/pricing' 
