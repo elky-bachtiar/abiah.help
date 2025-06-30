@@ -90,9 +90,21 @@ export function useAuth() {
       
       if (error) throw error;
       return data;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Sign up failed';
-      setError(message);
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      
+      // Handle specific error cases
+      if (error?.message?.includes('Database error saving new user')) {
+        setError('Our registration system is temporarily unavailable. Please try again later or contact support for assistance.');
+      } else if (error?.status === 500) {
+        setError('An unexpected error occurred with our service. Please try again later or contact support for assistance.');
+      } else if (error?.message?.includes('User already registered')) {
+        setError('This email is already registered. Please log in or use a different email address.');
+      } else {
+        const message = error instanceof Error ? error.message : 'Sign up failed';
+        setError(message);
+      }
+      
       throw error;
     } finally {
       setIsLoading(false);
@@ -111,9 +123,19 @@ export function useAuth() {
       
       if (error) throw error;
       return data;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Sign in failed';
-      setError(message);
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      
+      // Handle specific error cases
+      if (error?.message?.includes('Email not confirmed') || error?.code === 'email_not_confirmed') {
+        setError('Please confirm your email address before signing in. Check your inbox for a confirmation email.');
+      } else if (error?.message?.includes('Invalid login credentials')) {
+        setError('Incorrect email or password. Please try again.');
+      } else {
+        const message = error instanceof Error ? error.message : 'Sign in failed';
+        setError(message);
+      }
+      
       throw error;
     } finally {
       setIsLoading(false);
