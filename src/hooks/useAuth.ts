@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
+import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { userAtom, isAuthenticatedAtom, authLoadingAtom, authErrorAtom } from '../store/auth';
 import { User } from '../types';
@@ -128,12 +129,28 @@ export function useAuth() {
       
       // Handle specific error cases
       if (error?.message?.includes('Email not confirmed') || error?.code === 'email_not_confirmed') {
-        setError('Please confirm your email address before signing in. Check your inbox for a confirmation email.');
+        const message = 'Please confirm your email address before signing in. Check your inbox for a confirmation email.';
+        setError(message);
+        toast.error('Email Not Confirmed', {
+          description: message,
+          duration: 6000,
+          action: {
+            label: 'Resend',
+            onClick: () => resetPassword(email)
+          }
+        });
       } else if (error?.message?.includes('Invalid login credentials')) {
-        setError('Incorrect email or password. Please try again.');
+        const message = 'Incorrect email or password. Please try again.';
+        setError(message);
+        toast.error('Sign In Failed', {
+          description: message
+        });
       } else {
         const message = error instanceof Error ? error.message : 'Sign in failed';
         setError(message);
+        toast.error('Authentication Error', {
+          description: message
+        });
       }
       
       throw error;
