@@ -44,7 +44,7 @@ export function useAuth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         try {
           if (session?.user) {
             const userData: User = {
@@ -76,7 +76,7 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, [setUser, setIsAuthenticated, setIsLoading, setError]);
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -85,25 +85,44 @@ export function useAuth() {
         email,
         password,
         options: {
-          data: metadata,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            full_name: `${firstName} ${lastName}`,
+          },
         },
       });
       
       if (error) throw error;
+      
+      // Show success toast
+      toast.success('Registration Successful', {
+        description: 'Please check your email to confirm your account.'
+      });
+      
       return data;
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      console.error('Error during signup:', error);
       
-      // Handle specific error cases
-      if (error?.message?.includes('Database error saving new user')) {
-        setError('Our registration system is temporarily unavailable. Please try again later or contact support for assistance.');
-      } else if (error?.status === 500) {
-        setError('An unexpected error occurred with our service. Please try again later or contact support for assistance.');
-      } else if (error?.message?.includes('User already registered')) {
-        setError('This email is already registered. Please log in or use a different email address.');
+      // Handle common database errors with friendly messages
+      if (error.message?.includes('duplicate key value violates unique constraint')) {
+        const message = 'An account with this email already exists. Please sign in instead.';
+        setError(message);
+        toast.error('Account Already Exists', {
+          description: message
+        });
+      } else if (error.message?.includes('Database error saving new user')) {
+        const message = 'We encountered an issue creating your account. Please try again or contact support.';
+        setError(message);
+        toast.error('Account Creation Failed', {
+          description: message
+        });
       } else {
         const message = error instanceof Error ? error.message : 'Sign up failed';
         setError(message);
+        toast.error('Registration Error', {
+          description: message
+        });
       }
       
       throw error;
@@ -176,6 +195,9 @@ export function useAuth() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Social sign in failed';
       setError(message);
+      toast.error('Social Sign In Failed', {
+        description: message
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -184,17 +206,18 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsAuthenticated(false);
+      toast.success('Signed Out Successfully');
     } catch (error) {
+      console.error('Error signing out:', error);
       const message = error instanceof Error ? error.message : 'Sign out failed';
       setError(message);
+      toast.error('Sign Out Failed', {
+        description: message
+      });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -204,13 +227,54 @@ export function useAuth() {
       setError(null);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/update-password`,
       });
       
       if (error) throw error;
-    } catch (error) {
+      
+      toast.success('Password Reset Email Sent', {
+        description: 'Please check your inbox for instructions to reset your password.'
+      });
+      
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
       const message = error instanceof Error ? error.message : 'Password reset failed';
       setError(message);
+      
+      toast.error('Password Reset Failed', {
+        description: message
+      });
+      
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Password Updated Successfully', {
+        description: 'Your password has been changed.'
+      });
+      
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      const message = error instanceof Error ? error.message : 'Password update failed';
+      setError(message);
+      
+      toast.error('Password Update Failed', {
+        description: message
+      });
+      
       throw error;
     } finally {
       setIsLoading(false);
@@ -231,6 +295,9 @@ export function useAuth() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Profile update failed';
       setError(message);
+      toast.error('Profile Update Failed', {
+        description: message
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -242,11 +309,12 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     error,
-    signUp,
     signIn,
+    signUp,
     signInWithProvider,
     signOut,
     resetPassword,
-    updateProfile,
+    updatePassword,
+    updateProfile
   };
 }
