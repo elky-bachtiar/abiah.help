@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Check, Star, MessageSquare, Users, Crown, ArrowRight } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { createCheckoutSession } from '../../api/stripe';
@@ -11,6 +12,7 @@ interface PricingSectionProps {
 export function PricingSection({ hideSupport = false }: PricingSectionProps) {
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const plans = [
     {
@@ -189,7 +191,23 @@ export function PricingSection({ hideSupport = false }: PricingSectionProps) {
                     } else {
                       try {
                         setLoadingPlan(plan.name);
-                        await createCheckoutSession(plan.priceId, 'subscription', 5, true);
+                        const result = await createCheckoutSession(plan.priceId, 'subscription', 5, false);
+                        
+                        if (result.status === 'unauthenticated') {
+                          // Store selected plan in session storage to potentially use after login
+                          sessionStorage.setItem('selectedPlan', plan.priceId);
+                          
+                          // Redirect to signup page
+                          navigate('/signup', { 
+                            state: { 
+                              message: 'Please create an account or sign in to start your free trial.',
+                              returnTo: '/pricing' 
+                            } 
+                          });
+                        } else if (result.url) {
+                          // User is authenticated, redirect to checkout
+                          window.location.href = result.url;
+                        }
                       } catch (err) {
                         console.error(err);
                         alert('Could not start checkout session.');
