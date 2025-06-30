@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   first_name TEXT,
   last_name TEXT,
+  full_name TEXT,  -- Added full_name column required by the existing trigger
   avatar_url TEXT,
   updated_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
