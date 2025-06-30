@@ -59,14 +59,29 @@ export async function createCheckoutSession(
 
     if (autoRedirect) {
       console.log('STRIPE_PUBLISHABLE_KEY', STRIPE_PUBLISHABLE_KEY);
-      if (!STRIPE_PUBLISHABLE_KEY) {
-        console.warn('Stripe publishable key is not set. Falling back to direct redirect.');
+      try {
+        if (!STRIPE_PUBLISHABLE_KEY) {
+          console.warn('Stripe publishable key is not set. Falling back to direct redirect.');
+          window.location.href = url;
+        } else {
+          const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
+          console.log('stripe', stripe);
+          if (!stripe) {
+            console.error('Failed to load Stripe.js - falling back to direct URL');
+            window.location.href = url;
+            return { sessionId, url };
+          }
+          const result = await stripe.redirectToCheckout({ sessionId });
+          if (result?.error) {
+            console.error('Stripe redirect error:', result.error);
+            // Fall back to direct URL if Stripe.js redirect fails
+            window.location.href = url;
+          }
+        }
+      } catch (redirectError) {
+        console.error('Error during redirect:', redirectError);
+        // Final fallback - direct URL
         window.location.href = url;
-      } else {
-        const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
-        console.log('stripe', stripe);
-        if (!stripe) throw new Error('Failed to load Stripe.js');
-        await stripe.redirectToCheckout({ sessionId });
       }
     }
 
